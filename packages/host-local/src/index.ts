@@ -1,6 +1,11 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createLocalApiServer, type LocalApiServer } from '@agent-proof/api-server';
+import {
+  createLocalApiServer,
+  type EvidenceApi,
+  type LocalApiServer
+} from '@agent-proof/api-server';
+import type { ArtifactBase } from '@agent-proof/protocol';
 import { EncryptedFilesystemKeyProvider, SystemRandomSource } from '@agent-proof/crypto-local';
 import {
   createIdentityService,
@@ -31,6 +36,7 @@ export interface LocalHostDependencies {
   readonly clock: Clock;
 }
 export interface LocalHostOptions extends LocalHostDependencies {
+  readonly evidence?: EvidenceApi;
   readonly host?: string;
   readonly port?: number;
   readonly trustReloadToken?: string;
@@ -46,6 +52,7 @@ export function createLocalHost(options: LocalHostOptions): LocalHost {
   const service = createIdentityService(options);
   const api = createLocalApiServer({
     service,
+    ...(options.evidence === undefined ? {} : { evidence: options.evidence }),
     ...(options.host === undefined ? {} : { host: options.host }),
     ...(options.port === undefined ? {} : { port: options.port }),
     ...(options.trustReloadToken === undefined
@@ -144,6 +151,114 @@ class SqliteIdentityRepository implements IdentityRepository {
     const page = items.slice(0, limit);
     const next = items.length > limit ? page.at(-1)?.id : undefined;
     return next === undefined ? { items: page } : { items: page, nextCursor: next };
+  }
+}
+
+class SqliteEvidenceApi implements EvidenceApi {
+  public constructor(
+    private readonly storage: SqliteStorage,
+    private readonly clock: Clock
+  ) {}
+
+  async createDelegation(artifact: ArtifactBase) {
+    if (artifact.kind !== 'delegation')
+      throw new ServiceError('INVALID_INPUT', 'artifact must be a delegation');
+    const createdAt = nowUtc(this.clock.now());
+    this.storage.artifacts.put({
+      id: artifact.id,
+      kind: 'delegation',
+      artifact: artifact as unknown as JsonValue,
+      issuedAt: artifact.issued_at,
+      createdAt
+    });
+    return { id: artifact.id, artifact, createdAt };
+  }
+
+  async getDelegation(id: string) {
+    const record = this.storage.artifacts.get(id);
+    return record === undefined || record.kind !== 'delegation'
+      ? undefined
+      : {
+          id: record.id,
+          artifact: record.artifact as unknown as ArtifactBase,
+          createdAt: record.createdAt
+        };
+  }
+
+  async listDelegations(cursor: string | undefined, limit: number) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+      throw new ServiceError('INVALID_INPUT', 'limit must be an integer between 1 and 100');
+    // Cursor ordering is explicitly by immutable artifact ID, not issued time.
+    const records = this.storage.artifacts
+      .list('delegation')
+      .slice()
+      .sort((left, right) => left.id.localeCompare(right.id))
+      .filter((record) => cursor === undefined || record.id > cursor);
+    const page = records.slice(0, limit);
+    const nextCursor = records.length > limit ? page.at(-1)?.id : undefined;
+    return {
+      items: page.map((record) => ({
+        id: record.id,
+        artifact: record.artifact as unknown as ArtifactBase,
+        createdAt: record.createdAt
+      })),
+      ...(nextCursor === undefined ? {} : { nextCursor })
+    };
+  }
+
+  async createRevocation(artifact: ArtifactBase) {
+    if (artifact.kind !== 'revocation')
+      throw new ServiceError('INVALID_INPUT', 'artifact must be a revocation');
+    const targetType = artifact['target_type'];
+    const targetId = artifact['target_id'];
+    const effectiveAt = artifact['effective_at'];
+    if (
+      (targetType !== 'credential' && targetType !== 'key' && targetType !== 'delegation') ||
+      typeof targetId !== 'string' ||
+      typeof effectiveAt !== 'string'
+    )
+      throw new ServiceError('INVALID_INPUT', 'revocation target is invalid');
+    const createdAt = nowUtc(this.clock.now());
+    this.storage.artifacts.put({
+      id: artifact.id,
+      kind: 'revocation',
+      artifact: artifact as unknown as JsonValue,
+      issuedAt: artifact.issued_at,
+      createdAt
+    });
+    this.storage.artifacts.revoke({
+      id: artifact.id,
+      targetType,
+      targetId,
+      effectiveAt,
+      artifact: artifact as unknown as JsonValue,
+      createdAt
+    });
+    return { id: artifact.id, artifact, createdAt };
+  }
+
+  async getRevocation(id: string) {
+    const record = this.storage.artifacts.get(id);
+    return record === undefined || record.kind !== 'revocation'
+      ? undefined
+      : {
+          id: record.id,
+          artifact: record.artifact as unknown as ArtifactBase,
+          createdAt: record.createdAt
+        };
+  }
+
+  async listEvents(cursor: string | undefined, limit: number) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+      throw new ServiceError('INVALID_INPUT', 'limit must be an integer between 1 and 100');
+    const page = this.storage.events.list({
+      limit,
+      ...(cursor === undefined ? {} : { afterId: cursor })
+    });
+    return {
+      items: page.items.map((event) => ({ ...event })) as readonly Record<string, JsonValue>[],
+      ...(page.nextAfterId === undefined ? {} : { nextAfterId: page.nextAfterId })
+    };
   }
 }
 
@@ -265,6 +380,7 @@ export async function createConcreteLocalHost(
     verifier: createLocalIdentityVerifier(),
     trust,
     clock,
+    evidence: new SqliteEvidenceApi(storage, clock),
     ...(options.host === undefined ? {} : { host: options.host }),
     ...(options.port === undefined ? {} : { port: options.port }),
     ...(options.trustReloadToken === undefined

@@ -8,6 +8,7 @@
     "paths": {
       "@agent-proof/api-contract": ["../api-contract/dist/src/index.d.ts"],
       "@agent-proof/service": ["../service/dist/src/index.d.ts"],
+      "@agent-proof/protocol": ["../protocol/dist/src/index.d.ts"],
       "@agent-proof/protocol": ["../protocol/dist/src/index.d.ts"]
     }
   },

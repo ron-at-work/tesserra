@@ -29,6 +29,45 @@ export interface KeyRecord {
   readonly updatedAt: string;
 }
 
+export type StoredArtifactKind =
+  'delegation' | 'request' | 'provenance' | 'key_status' | 'revocation' | 'key_rotation';
+
+/** Canonical signed evidence is immutable and always stored intact. */
+export interface SignedArtifactRecord {
+  readonly id: string;
+  readonly kind: StoredArtifactKind;
+  readonly artifact: JsonValue;
+  readonly issuedAt: string;
+  readonly createdAt: string;
+}
+
+export interface RevocationRecord {
+  readonly id: string;
+  readonly targetType: 'credential' | 'key' | 'delegation';
+  readonly targetId: string;
+  readonly effectiveAt: string;
+  readonly artifact: JsonValue;
+  readonly createdAt: string;
+}
+
+export interface ProvenanceGraphNode {
+  readonly id: string;
+  readonly kind: StoredArtifactKind | 'verification_event';
+  readonly valid: boolean;
+  readonly artifact?: JsonValue;
+}
+
+export interface ProvenanceGraphEdge {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: 'authority' | 'request' | 'predecessor' | 'verification';
+}
+
+export interface ProvenanceGraph {
+  readonly nodes: readonly ProvenanceGraphNode[];
+  readonly edges: readonly ProvenanceGraphEdge[];
+}
+
 export interface IdentityCredentialRecord {
   readonly id: string;
   readonly agentId: string;
@@ -131,6 +170,17 @@ export interface TrustRepository {
     publisherId: string,
     targetKeyId: string
   ): StatusPublisherHighWater | undefined;
+}
+export interface ArtifactRepository {
+  put(record: SignedArtifactRecord): void;
+  get(id: string): SignedArtifactRecord | undefined;
+  list(kind?: StoredArtifactKind): readonly SignedArtifactRecord[];
+  revoke(record: RevocationRecord): void;
+  isRevoked(targetType: RevocationRecord['targetType'], targetId: string, at: string): boolean;
+  listRevocations(targetId?: string): readonly RevocationRecord[];
+}
+export interface ProvenanceRepository {
+  graph(rootId?: string): ProvenanceGraph;
 }
 export interface EventSink {
   record(event: VerificationEventRecord): void;

@@ -25,8 +25,6 @@ import type { VerificationInput } from './ports.js';
 
 const protocol = 'agent-proof/v1' as const;
 const stopWarning: readonly WarningCode[] = ['NOT_ALL_STAGES_EXECUTED'];
-const placeholderPolicyHash =
-  'urn:agent-proof:policy:v1:sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const object = (value: unknown): value is JsonObject =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 const array = (value: unknown): readonly JsonValue[] | undefined =>
@@ -72,7 +70,7 @@ function output(
     code,
     valid,
     decision_version: protocol,
-    verifier_now: input.now.toISOString().replace('.000Z', 'Z'),
+    verifier_now: utcSeconds(input.now),
     policy_hash: policyHash,
     status_snapshot_hash: statusSnapshotHash,
     evidence_ids: evidenceIds,
@@ -87,11 +85,10 @@ function output(
   };
 }
 function policyHash(snapshot: JsonObject): string {
-  try {
-    return policyHashFor(snapshot);
-  } catch {
-    return placeholderPolicyHash;
-  }
+  return policyHashFor(snapshot);
+}
+function utcSeconds(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 function publisherId(record: JsonObject): string {
   const publisher = object(record.publisher) ? record.publisher : undefined;
@@ -131,6 +128,18 @@ function orderedStatusMembers(artifacts: readonly ArtifactBase[]): readonly Json
 function statusHash(artifacts: readonly ArtifactBase[]): string {
   return statusHashFor(orderedStatusMembers(artifacts));
 }
+function rolesAreDisjoint(snapshot: JsonObject): boolean {
+  const issuers = array(snapshot.issuer_authorities) ?? [];
+  const publishers = array(snapshot.status_publishers) ?? [];
+  const issuerKeys = new Set(
+    issuers
+      .map((entry) => (object(entry) && string(entry.key_id) ? entry.key_id : undefined))
+      .filter((key): key is string => key !== undefined)
+  );
+  return publishers.every(
+    (entry) => !object(entry) || !string(entry.key_id) || !issuerKeys.has(entry.key_id)
+  );
+}
 function validTrustSnapshot(snapshot: JsonObject, calculatedPolicyHash: string): boolean {
   return (
     snapshot.policy_hash === calculatedPolicyHash &&
@@ -152,6 +161,7 @@ function validTrustSnapshot(snapshot: JsonObject, calculatedPolicyHash: string):
       snapshot.replay_policy === 'offline-inspection-only') &&
     array(snapshot.issuer_authorities) !== undefined &&
     array(snapshot.status_publishers) !== undefined &&
+    rolesAreDisjoint(snapshot) &&
     array(snapshot.roots) !== undefined &&
     array(snapshot.status_high_water) !== undefined
   );
@@ -290,7 +300,14 @@ function revokes(
 
 /** RFC 0001 verifier: PARSE → VERSION → CRYPTO → TIME → TRUST → CHAIN → STATUS → BINDING → REPLAY. */
 export function verifyArtifacts(input: VerificationInput): VerificationResult {
-  const calculatedPolicyHash = policyHash(input.trustSnapshot);
+  let calculatedPolicyHash: string;
+  try {
+    calculatedPolicyHash = policyHash(input.trustSnapshot);
+  } catch {
+    // The result shape requires a policy URN even when hostile input cannot be
+    // canonicalized. This is a deterministic sentinel, never a trusted policy hash.
+    calculatedPolicyHash = policyHashFor({ invalid_policy_snapshot: true });
+  }
   const calculatedStatusHash = statusHash(input.artifacts);
   const evidence: string[] = [];
   const stop = (
@@ -345,9 +362,15 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
   for (const artifact of input.artifacts) {
     if (artifact.version !== protocol) return stop('UNSUPPORTED_VERSION', preflightChainEvidence());
     if (
-      !['credential', 'delegation', 'request', 'key_status', 'revocation', 'key_rotation'].includes(
-        artifact.kind
-      )
+      ![
+        'credential',
+        'delegation',
+        'request',
+        'provenance',
+        'key_status',
+        'revocation',
+        'key_rotation'
+      ].includes(artifact.kind)
     )
       return stop('UNSUPPORTED_KIND', preflightChainEvidence());
     if (artifact.proof.alg !== 'Ed25519')
@@ -526,6 +549,8 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
         current.kind === 'request' ? preflightChainEvidence() : failureEvidence()
       );
     if (parent.kind !== reference?.kind) return stop('MISSING_REFERENCE', chainEvidence());
+    if (current.kind === 'request' && reference?.kind !== 'delegation')
+      return stop('MISSING_REFERENCE', chainEvidence());
     if (chain.some((entry) => entry.id === parent.id))
       return stop('CHAIN_BOUNDS_EXCEEDED', chainEvidence());
     if (
@@ -565,22 +590,11 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
         return stop('ATTENUATION_VIOLATION', chainEvidence());
   }
 
-  // STATUS
-  if (
+  // STATUS — offline inspection still enforces supplied key state and revocations.
+  // It skips only high-water/freshness requirements, which need current online state.
+  const offlineInspection =
     input.replayMode === 'offline' &&
-    input.trustSnapshot.replay_policy === 'offline-inspection-only'
-  )
-    return output(
-      input,
-      'VALID',
-      chain
-        .slice()
-        .reverse()
-        .map((artifact) => artifact.id),
-      calculatedPolicyHash,
-      calculatedStatusHash,
-      { warnings: ['OFFLINE_STATUS_NOT_FRESH', 'OFFLINE_REPLAY_NOT_CHECKED'] }
-    );
+    input.trustSnapshot.replay_policy === 'offline-inspection-only';
   const keys = new Set(
     chain.flatMap((artifact) =>
       [artifact.proof.kid, string(artifact.key_id) ? artifact.key_id : undefined].filter(
@@ -590,6 +604,7 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
   );
   for (const keyId of keys) {
     const selected = statusFor(input.artifacts, keyId);
+    if (offlineInspection && !selected) continue;
     if (!selected)
       return stop(
         'STATUS_UNAVAILABLE',
@@ -614,27 +629,29 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
           .reverse()
           .map((artifact) => artifact.id)
       );
-    const water = highWater(input.trustSnapshot, selected.publisher, keyId);
-    if (
-      !water ||
-      water.sequence !== selected.sequence ||
-      water.semantic_digest !== semanticDigestFor(selected)
-    )
-      return stop(
-        'STATUS_ROLLBACK',
-        chain
-          .slice()
-          .reverse()
-          .map((artifact) => artifact.id)
-      );
-    if ((at(selected.as_of) ?? Infinity) > now || (at(selected.valid_until) ?? -Infinity) < now)
-      return stop(
-        'STATUS_STALE',
-        chain
-          .slice()
-          .reverse()
-          .map((artifact) => artifact.id)
-      );
+    if (!offlineInspection) {
+      const water = highWater(input.trustSnapshot, selected.publisher, keyId);
+      if (
+        !water ||
+        water.sequence !== selected.sequence ||
+        water.semantic_digest !== semanticDigestFor(selected)
+      )
+        return stop(
+          'STATUS_ROLLBACK',
+          chain
+            .slice()
+            .reverse()
+            .map((artifact) => artifact.id)
+        );
+      if ((at(selected.as_of) ?? Infinity) > now || (at(selected.valid_until) ?? -Infinity) < now)
+        return stop(
+          'STATUS_STALE',
+          chain
+            .slice()
+            .reverse()
+            .map((artifact) => artifact.id)
+        );
+    }
   }
   for (const record of input.artifacts)
     if ([...chain].some((artifact) => revokes(record, artifact, keys, now)))
@@ -652,25 +669,30 @@ export function verifyArtifacts(input: VerificationInput): VerificationResult {
     .slice()
     .reverse()
     .map((artifact) => artifact.id);
+  const bindingOptions = offlineInspection ? {} : { statusFresh: true };
   if (!principalEqual(request.signer, input.context.expectedSigner))
-    return stop('SIGNER_MISMATCH', evidenceIds, { statusFresh: true });
+    return stop('SIGNER_MISMATCH', evidenceIds, bindingOptions);
   if (request.audience !== input.context.audience)
-    return stop('AUDIENCE_MISMATCH', evidenceIds, { statusFresh: true });
+    return stop('AUDIENCE_MISMATCH', evidenceIds, bindingOptions);
   if (
     !effective ||
     !contains(effective.capabilities, request.action) ||
     !contains(effective.capabilities, input.context.action)
   )
-    return stop('ACTION_NOT_ALLOWED', evidenceIds, { statusFresh: true });
+    return stop('ACTION_NOT_ALLOWED', evidenceIds, bindingOptions);
   if (
     !contains(effective.resources, request.resource) ||
     !canonicalEqual(request.resource, input.context.resource)
   )
-    return stop('RESOURCE_NOT_ALLOWED', evidenceIds, { statusFresh: true });
+    return stop('RESOURCE_NOT_ALLOWED', evidenceIds, bindingOptions);
   if (!contains(effective.tasks, request.task) || request.task !== input.context.task)
-    return stop('TASK_NOT_ALLOWED', evidenceIds, { statusFresh: true });
+    return stop('TASK_NOT_ALLOWED', evidenceIds, bindingOptions);
 
   // REPLAY
+  if (offlineInspection)
+    return stop('VALID', evidenceIds, {
+      warnings: ['OFFLINE_STATUS_NOT_FRESH', 'OFFLINE_REPLAY_NOT_CHECKED']
+    });
   if (input.context.replayRequired && input.replayMode === 'offline')
     return stop('OFFLINE_REPLAY_UNAVAILABLE', evidenceIds, { statusFresh: true });
   if (input.context.replayRequired && input.replay === 'duplicate')

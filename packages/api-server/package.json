@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@agent-proof/api-contract": "workspace:*",
-    "@agent-proof/service": "workspace:*"
+    "@agent-proof/service": "workspace:*",
+    "@agent-proof/protocol": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

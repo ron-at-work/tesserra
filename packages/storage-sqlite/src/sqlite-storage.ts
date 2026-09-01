@@ -5,10 +5,18 @@ import { migrations } from './migrations.js';
 import type {
   AgentRecord,
   AgentRepository,
+  ArtifactRepository,
   EventSink,
   IdentityCredentialRecord,
   IdentityCredentialRepository,
   JsonValue,
+  ProvenanceGraph,
+  ProvenanceGraphEdge,
+  ProvenanceGraphNode,
+  ProvenanceRepository,
+  RevocationRecord,
+  SignedArtifactRecord,
+  StoredArtifactKind,
   KeyRecord,
   KeyRepository,
   ReplayKey,
@@ -89,6 +97,34 @@ function assertNoPrivateMaterial(value: JsonValue): void {
   };
   walk(value);
 }
+function provenanceEdges(
+  record: SignedArtifactRecord
+): readonly { to: string; relation: 'authority' | 'request' | 'predecessor' }[] {
+  if (!isObject(record.artifact) || record.kind !== 'provenance') return [];
+  const references = (value: JsonValue | undefined): readonly { id: string }[] =>
+    Array.isArray(value)
+      ? value.filter(
+          (item): item is { readonly id: string } =>
+            isObject(item) && typeof item['id'] === 'string'
+        )
+      : [];
+  const edges = [
+    ...references(record.artifact['authority_refs']).map((reference) => ({
+      to: reference.id,
+      relation: 'authority' as const
+    })),
+    ...references(record.artifact['predecessor_refs']).map((reference) => ({
+      to: reference.id,
+      relation: 'predecessor' as const
+    }))
+  ];
+  const requestReference = record.artifact['request_ref'] as JsonValue | undefined;
+  const request =
+    requestReference !== undefined && isObject(requestReference) ? requestReference : undefined;
+  return typeof request?.['id'] === 'string'
+    ? [...edges, { to: request['id'], relation: 'request' }]
+    : edges;
+}
 function assertRedacted(value: JsonValue | undefined): void {
   if (value === undefined) return;
   const prohibited = /private|secret|token|passphrase|password|authorization|payload|nonce/i;
@@ -151,6 +187,15 @@ export class SqliteStorage {
     getHighWater: (snapshotId, publisherId, targetKeyId) =>
       this.getStatusHighWater(snapshotId, publisherId, targetKeyId)
   };
+  readonly artifacts: ArtifactRepository = {
+    put: (record) => this.putArtifact(record),
+    get: (id) => this.getArtifact(id),
+    list: (kind) => this.listArtifacts(kind),
+    revoke: (record) => this.revokeArtifact(record),
+    isRevoked: (targetType, targetId, at) => this.isRevoked(targetType, targetId, at),
+    listRevocations: (targetId) => this.listRevocations(targetId)
+  };
+  readonly provenance: ProvenanceRepository = { graph: (rootId) => this.provenanceGraph(rootId) };
   readonly events: EventSink = {
     record: (event) => this.recordVerificationEvent(event),
     list: (filter) => this.listVerificationEvents(filter)
@@ -498,6 +543,110 @@ export class SqliteStorage {
         };
   }
 
+  putArtifact(record: SignedArtifactRecord): void {
+    assertNoPrivateMaterial(record.artifact);
+    this.#transaction(() => {
+      const existing = this.getArtifact(record.id);
+      if (existing !== undefined) {
+        if (existing.kind !== record.kind || json(existing.artifact) !== json(record.artifact))
+          throw new Error('signed artifact identity conflict');
+        return;
+      }
+      this.#db
+        .prepare('INSERT INTO signed_artifacts VALUES (?, ?, ?, ?, ?)')
+        .run(record.id, record.kind, json(record.artifact), record.issuedAt, record.createdAt);
+      for (const edge of provenanceEdges(record))
+        this.#db
+          .prepare('INSERT OR IGNORE INTO provenance_edges VALUES (?, ?, ?)')
+          .run(record.id, edge.to, edge.relation);
+    });
+  }
+  getArtifact(id: string): SignedArtifactRecord | undefined {
+    const row = this.#db.prepare('SELECT * FROM signed_artifacts WHERE id = ?').get(id) as
+      SqlRow | undefined;
+    return row === undefined ? undefined : this.#artifact(row);
+  }
+  listArtifacts(kind?: StoredArtifactKind): readonly SignedArtifactRecord[] {
+    const rows = (
+      kind === undefined
+        ? this.#db.prepare('SELECT * FROM signed_artifacts ORDER BY issued_at, id').all()
+        : this.#db
+            .prepare('SELECT * FROM signed_artifacts WHERE kind = ? ORDER BY issued_at, id')
+            .all(kind)
+    ) as SqlRow[];
+    return rows.map((row) => this.#artifact(row));
+  }
+  revokeArtifact(record: RevocationRecord): void {
+    assertNoPrivateMaterial(record.artifact);
+    this.#transaction(() => {
+      const artifact = this.getArtifact(record.id);
+      if (artifact === undefined || artifact.kind !== 'revocation')
+        throw new Error('revocation must reference a stored signed revocation artifact');
+      this.#db
+        .prepare('INSERT INTO revocations VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING')
+        .run(
+          record.id,
+          record.targetType,
+          record.targetId,
+          record.effectiveAt,
+          json(record.artifact),
+          record.createdAt
+        );
+    });
+  }
+  isRevoked(targetType: RevocationRecord['targetType'], targetId: string, at: string): boolean {
+    return (
+      (this.#db
+        .prepare(
+          'SELECT 1 FROM revocations WHERE target_type = ? AND target_id = ? AND julianday(effective_at) <= julianday(?) LIMIT 1'
+        )
+        .get(targetType, targetId, at) as SqlRow | undefined) !== undefined
+    );
+  }
+  listRevocations(targetId?: string): readonly RevocationRecord[] {
+    const rows = (
+      targetId === undefined
+        ? this.#db.prepare('SELECT * FROM revocations ORDER BY effective_at, id').all()
+        : this.#db
+            .prepare('SELECT * FROM revocations WHERE target_id = ? ORDER BY effective_at, id')
+            .all(targetId)
+    ) as SqlRow[];
+    return rows.map((row) => ({
+      id: requiredString(row['id']),
+      targetType: requiredString(row['target_type']) as RevocationRecord['targetType'],
+      targetId: requiredString(row['target_id']),
+      effectiveAt: requiredString(row['effective_at']),
+      artifact: parseJson(row['artifact_json']),
+      createdAt: requiredString(row['created_at'])
+    }));
+  }
+  provenanceGraph(rootId?: string): ProvenanceGraph {
+    const artifacts =
+      rootId === undefined ? this.listArtifacts() : this.#reachableArtifacts(rootId);
+    const nodes: ProvenanceGraphNode[] = artifacts.map((artifact) => ({
+      id: artifact.id,
+      kind: artifact.kind,
+      valid: !(
+        artifact.kind === 'delegation' &&
+        this.isRevoked('delegation', artifact.id, this.#now().toISOString())
+      ),
+      artifact: artifact.artifact
+    }));
+    const ids = new Set(nodes.map((node) => node.id));
+    const edges = (
+      this.#db
+        .prepare('SELECT * FROM provenance_edges ORDER BY from_id, relation, to_id')
+        .all() as SqlRow[]
+    )
+      .map((row) => ({
+        from: requiredString(row['from_id']),
+        to: requiredString(row['to_id']),
+        relation: requiredString(row['relation']) as ProvenanceGraphEdge['relation']
+      }))
+      .filter((edge) => rootId === undefined || (ids.has(edge.from) && ids.has(edge.to)));
+    return { nodes, edges };
+  }
+
   recordVerificationEvent(event: VerificationEventRecord): void {
     assertRedacted(event.redactedEvidence);
     this.#db
@@ -601,6 +750,27 @@ export class SqliteStorage {
       this.#db.exec('ROLLBACK');
       throw error;
     }
+  }
+  #reachableArtifacts(rootId: string): readonly SignedArtifactRecord[] {
+    const rows = this.#db
+      .prepare(
+        `WITH RECURSIVE reachable(id) AS (
+          SELECT ?
+          UNION
+          SELECT provenance_edges.to_id FROM provenance_edges JOIN reachable ON provenance_edges.from_id = reachable.id
+        ) SELECT signed_artifacts.* FROM signed_artifacts JOIN reachable ON signed_artifacts.id = reachable.id ORDER BY issued_at, id`
+      )
+      .all(rootId) as SqlRow[];
+    return rows.map((row) => this.#artifact(row));
+  }
+  #artifact(row: SqlRow): SignedArtifactRecord {
+    return {
+      id: requiredString(row['id']),
+      kind: requiredString(row['kind']) as StoredArtifactKind,
+      artifact: parseJson(row['artifact_json']),
+      issuedAt: requiredString(row['issued_at']),
+      createdAt: requiredString(row['created_at'])
+    };
   }
   #agent(row: SqlRow): AgentRecord {
     const displayName = optionalString(row['display_name']);

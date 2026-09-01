@@ -33,15 +33,26 @@ non-alphabet bytes and decode/re-encode identically. JWK x/nonce are 32 bytes;
 signatures 64 bytes. `JCS(x)` is RFC 8785 UTF-8; ordinary JSON serialization or
 Unicode/URI normalization is forbidden.
 
-Frozen preimages use exact ASCII prefix, NUL, and JCS:
+Frozen preimages use exact ASCII prefix, NUL, and JCS. The following
+normative preimage forms are fenced deliberately: a Markdown table cannot safely
+represent the literal `||` token without treating it as a column separator. Do
+not reflow or format these expressions; the protocol values are the code text.
 
-| Value | Prefix and object | Rendered identifier |
-|---|---|---|
-| key ID | `AGENT-PROOF-KEY-ID-V1\0 || JCS(jwk)` | `urn:agent-proof:kid:v1:sha256:` + B64U(SHA-256) |
-| artifact ID | `AGENT-PROOF-ARTIFACT-ID-V1\0 || JCS(content)` | `urn:agent-proof:v1:sha256:` + B64U(SHA-256) |
-| policy hash | `AGENT-PROOF-POLICY-HASH-V1\0 || JCS(snapshot without policy_hash)` | `urn:agent-proof:policy:v1:sha256:` + B64U(SHA-256) |
-| status hash | `AGENT-PROOF-STATUS-SNAPSHOT-V1\0 || JCS(status_members)` | `urn:agent-proof:status:v1:sha256:` + B64U(SHA-256) |
-| proof | `AGENT-PROOF-SIGN-V1\0 || kind || \0 || JCS(semantic)` | Ed25519 signature |
+```text
+key ID:      AGENT-PROOF-KEY-ID-V1\0 || JCS(jwk)
+artifact ID: AGENT-PROOF-ARTIFACT-ID-V1\0 || JCS(content)
+policy hash: AGENT-PROOF-POLICY-HASH-V1\0 || JCS(snapshot without policy_hash)
+status hash: AGENT-PROOF-STATUS-SNAPSHOT-V1\0 || JCS(status_members)
+proof:       AGENT-PROOF-SIGN-V1\0 || kind || \0 || JCS(semantic)
+```
+
+| Value       | Rendered identifier                                 |
+| ----------- | --------------------------------------------------- |
+| key ID      | `urn:agent-proof:kid:v1:sha256:` + B64U(SHA-256)    |
+| artifact ID | `urn:agent-proof:v1:sha256:` + B64U(SHA-256)        |
+| policy hash | `urn:agent-proof:policy:v1:sha256:` + B64U(SHA-256) |
+| status hash | `urn:agent-proof:status:v1:sha256:` + B64U(SHA-256) |
+| proof       | Ed25519 signature                                   |
 
 `content` removes `id` and `proof`; `semantic` removes `proof`. No unused
 request preimage exists. Public JWK is exact OKP/Ed25519/x (RFC 8037).
@@ -71,14 +82,16 @@ A credential is issuer-signed binding of agent subject/JWK/key and bounded
 MUST NOT be selected as a root. This keeps root authority distinct from later
 agent key binding. A
 delegation is a signed typed local `parent_ref`; both referenced ID and kind
-must match. Every child is a subset of parent and root ceiling and has strictly
+must match. A request `delegation_ref.kind` MUST be `delegation`, never
+`credential`. Every child is a subset of parent and root ceiling and has strictly
 lower remaining depth. Its proof key must be the credentialed stated
 delegator/signing principal; credential proof key must be an issuer role key.
 
 ## 4. Trust, roots, status, rotation, and provenance
 
 TrustSnapshot is authenticated local policy, never TOFU. It has typed issuer
-roles, distinct status-publisher roles (a key MUST NOT hold both), typed roots,
+roles, distinct status-publisher roles (a `key_id` MUST NOT occur in both role
+sets), typed roots,
 limits, replay/archival policy, and high-water entries. A root authorizes only
 when credential issuer, credential subject, and purpose exactly equal a root
 entry; otherwise `MIXED_TRUST_ROOT`. Unknown issuer/key respectively yield
@@ -118,6 +131,23 @@ refs, immutable subject digest, project predicate, input/output digests, and
 predecessor refs. It is evidence, never authority. Predecessors are acyclic and
 invalid/missing evidence remains invalid; no in-toto/PROV compliance is claimed.
 
+### Amendment 2026-09-01 — delegation-only verification API
+
+`verifyDelegationChain` is a deterministic local API for authority evidence that
+has not yet been put into a request. It accepts exactly one root-authority
+credential, zero or more agent-key-binding credentials, one parent-linked
+leaf delegation chain, and signed key-status/revocation/rotation evidence with
+a TrustSnapshot. It executes **PARSE → VERSION → CRYPTO → TIME → TRUST →
+CHAIN → STATUS**, returns the same closed `VerificationResult` taxonomy, and
+ends there: it MUST NOT require or synthesize a request, expected request
+context, BINDING, or REPLAY. A successful result has `status_fresh=true` and
+`replay_checked=false`. The root credential anchors the chain; key-binding
+credentials only authorize stated delegation proof keys. A chain API input is
+invalid if it has no leaf or more than one leaf. It rejects malformed or
+unknown evidence, signature tampering, missing/wrong parent linkage, expansion,
+expired evidence, unavailable/stale/rolled-back key status, and effective
+revocation using the ordinary closed codes and deterministic stage precedence.
+
 ## 5. Requests, binding, and replay
 
 A request signs delegation, UUIDv7 request ID, nonce, action/resource/task/
@@ -130,9 +160,14 @@ Online side effects atomically consume **two separate uniqueness keys**:
 `(audience, signer_key_id, request_id)` and `(audience, signer_key_id, nonce)`;
 either duplicate is `REPLAY_DETECTED`. Retain both through expiry plus skew.
 Online-required offline input is `OFFLINE_REPLAY_UNAVAILABLE`. In explicit
-offline-inspection-only policy, `status_fresh=false`, `replay_checked=false`,
-and warnings include `OFFLINE_STATUS_NOT_FRESH` and
-`OFFLINE_REPLAY_NOT_CHECKED`; it MUST NOT authorize a side effect.
+offline-inspection-only policy, the verifier MUST still execute STATUS against
+all supplied signed `key_status` and `revocation` records and MUST reject a
+non-active key or an effective revocation. It skips only online freshness and
+high-water checks. It then MUST execute BINDING; wrong signer, audience,
+action, resource, task, or digest MUST fail normally. After successful binding,
+`status_fresh=false`, `replay_checked=false`, and warnings include
+`OFFLINE_STATUS_NOT_FRESH` and `OFFLINE_REPLAY_NOT_CHECKED`; it MUST NOT
+authorize a side effect.
 
 ## 6. Ordered verification and output
 

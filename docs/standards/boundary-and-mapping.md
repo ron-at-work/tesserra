@@ -4,31 +4,31 @@
 
 ATTEST is a project-defined evidence-verification layer, not a replacement for identity, PKI, OAuth/OIDC, MCP, A2A, SPIFFE/SPIRE, authorization servers, policy engines, or provenance standards. The following boundary is intentional:
 
-| Function | Owner | ATTEST action |
-| --- | --- | --- |
-| Authenticate workload/process and rotate workload credentials | SPIFFE/SPIRE or equivalent platform | Consume verified runtime-evidence through an adapter. |
-| Authenticate end user and authorize resource access | OAuth/OIDC authorization server and resource server | Consume issuer-scoped token/claim facts; do not issue grants or decide consent. |
-| Discover and call MCP tools | MCP client/server and their OAuth profile | Preserve MCP authorization requirements; optionally attach separate proof only through a future explicit binding. |
-| Discover/call peer agents and maintain task lifecycle | A2A peers | Preserve A2A schemas/security declarations; negotiate an optional evidence extension rather than changing task semantics. |
-| Model agent/task provenance | PROV / in-toto / DSSE (and optionally SCITT) | Export or map verified facts to these structures; do not regard them as authorization. |
-| Verify a bounded chain of project evidence | ATTEST project-defined RFC under local policy | Parse, verify signatures and source references, check typed bindings/attenuation/status/replay, and return a deterministic result. |
+| Function                                                      | Owner                                               | ATTEST action                                                                                                                      |
+| ------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Authenticate workload/process and rotate workload credentials | SPIFFE/SPIRE or equivalent platform                 | Consume verified runtime-evidence through an adapter.                                                                              |
+| Authenticate end user and authorize resource access           | OAuth/OIDC authorization server and resource server | Consume issuer-scoped token/claim facts; do not issue grants or decide consent.                                                    |
+| Discover and call MCP tools                                   | MCP client/server and their OAuth profile           | Preserve MCP authorization requirements; optionally attach separate proof only through a future explicit binding.                  |
+| Discover/call peer agents and maintain task lifecycle         | A2A peers                                           | Preserve A2A schemas/security declarations; negotiate an optional evidence extension rather than changing task semantics.          |
+| Model agent/task provenance                                   | PROV / in-toto / DSSE (and optionally SCITT)        | Export or map verified facts to these structures; do not regard them as authorization.                                             |
+| Verify a bounded chain of project evidence                    | ATTEST project-defined RFC under local policy       | Parse, verify signatures and source references, check typed bindings/attenuation/status/replay, and return a deterministic result. |
 
 ## Protocol-neutral concepts proposed for ATTEST
 
 These concepts are intentionally abstract. Names, bytes, algorithms, and field formats are frozen by RFC 0001; this standards analysis records why they remain project-defined rather than external-standard claims.
 
-| Concept | Required typed content | What it is not |
-| --- | --- | --- |
-| Authority reference | Kind (`human` or `service`), issuer/local-policy namespace, immutable subject reference, evidence reference | A claim that a human and agent are the same principal. |
-| Logical-agent reference | Stable agent namespace/identifier, issuer or self-certifying key reference, validity | A SPIFFE ID, OAuth client ID, A2A endpoint, or model label by default. |
-| Runtime evidence reference | Attester/issuer, workload identifier, credential/key reference, verification time, trust-domain context | Proof of delegation, user consent, or a logical-agent identity. |
-| OAuth-client reference | Authorization-server issuer, client ID, registration/deployment context | A portable identity or a resource owner. |
-| Model provenance reference | Provider/model/version/config or artifact digest, collection method, observation time | A signing key or authority-bearing identity. |
-| Delegation link | Parent ID, delegator and delegate typed references, exact allowed actions/resources/task/audiences/validity/depth, signer/trust reference | OAuth token issuance, impersonation, or unrestricted agency. |
-| Task context | Immutable task definition or digest, input/output references, target resource/audience, transport-specific task IDs as annotations | A mutable display name or URL accepted as authorization evidence. |
-| Verification record | Inputs, source verification observations, pinned local trust/policy/status snapshot identifiers and hash, ordered result codes | A statement that an external source endorses the decision. |
-| Credential constraint / root ceiling | Trusted issuer/key and exact maximum authority dimensions: subject type, actions, resources, task, audience, validity, remaining depth | Authority inferred from a signature, SPIFFE ID, OAuth client, Agent Card, model label, or network location. |
-| Request/task-context digest | RFC 8785 canonical semantic payload/context and domain-separated digest; transport task/message ID only as an optional annotation | A mutable task ID, URL, display name, or ordinary transport correlation ID accepted as signed authority context. |
+| Concept                              | Required typed content                                                                                                                    | What it is not                                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Authority reference                  | Kind (`human` or `service`), issuer/local-policy namespace, immutable subject reference, evidence reference                               | A claim that a human and agent are the same principal.                                                           |
+| Logical-agent reference              | Stable agent namespace/identifier, issuer or self-certifying key reference, validity                                                      | A SPIFFE ID, OAuth client ID, A2A endpoint, or model label by default.                                           |
+| Runtime evidence reference           | Attester/issuer, workload identifier, credential/key reference, verification time, trust-domain context                                   | Proof of delegation, user consent, or a logical-agent identity.                                                  |
+| OAuth-client reference               | Authorization-server issuer, client ID, registration/deployment context                                                                   | A portable identity or a resource owner.                                                                         |
+| Model provenance reference           | Provider/model/version/config or artifact digest, collection method, observation time                                                     | A signing key or authority-bearing identity.                                                                     |
+| Delegation link                      | Parent ID, delegator and delegate typed references, exact allowed actions/resources/task/audiences/validity/depth, signer/trust reference | OAuth token issuance, impersonation, or unrestricted agency.                                                     |
+| Task context                         | Immutable task definition or digest, input/output references, target resource/audience, transport-specific task IDs as annotations        | A mutable display name or URL accepted as authorization evidence.                                                |
+| Verification record                  | Inputs, source verification observations, pinned local trust/policy/status snapshot identifiers and hash, ordered result codes            | A statement that an external source endorses the decision.                                                       |
+| Credential constraint / root ceiling | Trusted issuer/key and exact maximum authority dimensions: subject type, actions, resources, task, audience, validity, remaining depth    | Authority inferred from a signature, SPIFFE ID, OAuth client, Agent Card, model label, or network location.      |
+| Request/task-context digest          | RFC 8785 canonical semantic payload/context and domain-separated digest; transport task/message ID only as an optional annotation         | A mutable task ID, URL, display name, or ordinary transport correlation ID accepted as signed authority context. |
 
 The frozen wire namespace is neutral and project-defined: `agent-proof/v1` is the artifact/version namespace; `urn:agent-proof:*` identifies project artifacts and keys; and `https://agent-proof.invalid/*` is the project schema/predicate namespace. `agid:v1` is reserved only for structured logical-agent IDs. The working display name is not a wire identifier. The project-defined envelope strictly parses I-JSON, canonicalizes with RFC 8785, pins literal `Ed25519`, uses public OKP JWK shape, and domain-separates its signing/hash inputs [CRYPTO-05–CRYPTO-13]. It is not JWS, DSSE, or an assertion of a new external standard.
 

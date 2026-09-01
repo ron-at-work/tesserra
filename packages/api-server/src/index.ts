@@ -5,6 +5,12 @@ import { isIP } from 'node:net';
 import { parseApiJson, StrictJsonError, type ErrorEnvelope } from '@agent-proof/api-contract';
 import type { JsonValue } from '@agent-proof/api-contract';
 import {
+  verifyArtifacts,
+  verifyDelegationChain,
+  type VerificationResult
+} from '@agent-proof/service';
+import { artifactIdFor, validateArtifact, type ArtifactBase } from '@agent-proof/protocol';
+import {
   ServiceError,
   type CreateIdentityInput,
   type IdentityCredential,
@@ -13,8 +19,39 @@ import {
   type TrustSnapshot
 } from '@agent-proof/service';
 
+export interface EvidenceApi {
+  createDelegation(
+    artifact: ArtifactBase
+  ): Promise<{ id: string; artifact: ArtifactBase; createdAt: string }>;
+  getDelegation(
+    id: string
+  ): Promise<{ id: string; artifact: ArtifactBase; createdAt: string } | undefined>;
+  listDelegations(
+    cursor: string | undefined,
+    limit: number
+  ): Promise<{
+    items: readonly { id: string; artifact: ArtifactBase; createdAt: string }[];
+    nextCursor?: string;
+  }>;
+  createRevocation(
+    artifact: ArtifactBase
+  ): Promise<{ id: string; artifact: ArtifactBase; createdAt: string }>;
+  getRevocation(
+    id: string
+  ): Promise<{ id: string; artifact: ArtifactBase; createdAt: string } | undefined>;
+  listEvents(
+    cursor: string | undefined,
+    limit: number
+  ): Promise<{
+    items: readonly Record<string, JsonValue>[];
+    nextAfterId?: string;
+  }>;
+}
+
 export interface LocalApiServerOptions {
   readonly service: IdentityService;
+  /** Phase 2–5 persistence surface supplied by the concrete host. */
+  readonly evidence?: EvidenceApi;
   readonly host?: string;
   readonly port?: number;
   /** Required to enable the security-sensitive configured-trust reload endpoint. */
@@ -23,6 +60,8 @@ export interface LocalApiServerOptions {
   readonly maxBodyBytes?: number;
   /** Per-peer limit for failed reload-token attempts within one minute. */
   readonly reloadFailureLimit?: number;
+  /** Injectable clock for deterministic local verification tests. */
+  readonly now?: () => Date;
 }
 
 export interface LocalApiServer {
@@ -147,6 +186,146 @@ function identityResponse(identity: IdentityRecord): Record<string, unknown> {
   return { id: identity.id, credential: identity.credential, createdAt: identity.createdAt };
 }
 
+function artifactResponse(
+  record: { id: string; artifact: ArtifactBase; createdAt: string },
+  field: 'delegation' | 'revocation'
+): Record<string, unknown> {
+  return { id: record.id, [field]: record.artifact, createdAt: record.createdAt };
+}
+
+function artifactSubmission(
+  value: JsonValue,
+  field: 'delegation' | 'revocation'
+): {
+  artifact: ArtifactBase;
+  evidence: readonly ArtifactBase[];
+} {
+  const record = isRecord(value) ? value : undefined;
+  const artifact = record?.[field] as JsonValue | undefined;
+  const supplied = record?.['artifacts'];
+  if (artifact === undefined || !isRecord(artifact) || !validateArtifact(artifact))
+    throw new ServiceError('INVALID_INPUT', 'signed artifact schema is invalid');
+  const typed = artifact as unknown as ArtifactBase;
+  if (typed.id !== artifactIdFor(typed))
+    throw new ServiceError(
+      'INVALID_INPUT',
+      'signed artifact identifier does not match its canonical content'
+    );
+  if (
+    (field === 'delegation' && typed.kind !== 'delegation') ||
+    (field === 'revocation' && typed.kind !== 'revocation')
+  )
+    throw new ServiceError('INVALID_INPUT', `artifact must be a ${field}`);
+  if (
+    supplied !== undefined &&
+    (!Array.isArray(supplied) ||
+      supplied.some((item) => !isRecord(item) || !validateArtifact(item)))
+  )
+    throw new ServiceError('INVALID_INPUT', 'supporting evidence schema is invalid');
+  const evidence = [typed, ...((supplied ?? []) as unknown as ArtifactBase[])];
+  if (evidence.some((item) => item.id !== artifactIdFor(item)))
+    throw new ServiceError(
+      'INVALID_INPUT',
+      'supporting evidence identifier does not match its canonical content'
+    );
+  return { artifact: typed, evidence };
+}
+
+async function authorizeDelegationStorage(
+  service: IdentityService,
+  artifact: ArtifactBase,
+  evidence: readonly ArtifactBase[],
+  now: Date
+): Promise<void> {
+  if (Date.parse(artifact.issued_at) > now.getTime())
+    throw new ServiceError('INVALID_INPUT', 'signed artifact is not yet valid');
+  const rootCredential = evidence.find(
+    (item) => item.kind === 'credential' && item['credential_purpose'] === 'agent-root-authority'
+  );
+  if (rootCredential === undefined)
+    throw new ServiceError(
+      'INVALID_INPUT',
+      'delegation authorization requires root credential evidence'
+    );
+  const result = verifyDelegationChain({
+    rootCredential,
+    keyBindingCredentials: evidence.filter(
+      (item) => item.kind === 'credential' && item.id !== rootCredential.id
+    ),
+    delegations: evidence.filter((item) => item.kind === 'delegation'),
+    statusEvidence: evidence.filter(
+      (item) =>
+        item.kind === 'key_status' || item.kind === 'revocation' || item.kind === 'key_rotation'
+    ),
+    trustSnapshot: (await service.readTrustSnapshot()) as never,
+    now,
+    offlineInspection: true
+  });
+  if (!result.valid)
+    throw new ServiceError('INVALID_INPUT', `delegation authorization failed: ${result.code}`);
+}
+
+function verificationInput(value: JsonValue): {
+  artifacts: readonly ArtifactBase[];
+  context: Record<string, JsonValue>;
+  replayMode: 'online' | 'offline';
+} {
+  const record =
+    value !== null && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, JsonValue>)
+      : undefined;
+  const artifacts = record?.['artifacts'];
+  const context = record?.['context'];
+  if (
+    artifacts === undefined ||
+    context === undefined ||
+    !Array.isArray(artifacts) ||
+    !isRecord(context)
+  )
+    throw new ServiceError('INVALID_INPUT', 'request body is invalid');
+  const replayMode = record?.['replayMode'] ?? 'offline';
+  if (replayMode !== 'online' && replayMode !== 'offline')
+    throw new ServiceError('INVALID_INPUT', 'replayMode is invalid');
+  return {
+    artifacts: artifacts as unknown as readonly ArtifactBase[],
+    context,
+    replayMode
+  };
+}
+
+function verificationContext(value: Record<string, JsonValue>) {
+  const expected = [
+    'audience',
+    'action',
+    'resource',
+    'task',
+    'expectedSigner',
+    'expectedPayloadDigest',
+    'expectedTaskContextDigest'
+  ];
+  if (
+    expected.some((key) => value[key] === undefined) ||
+    typeof value['audience'] !== 'string' ||
+    typeof value['action'] !== 'string' ||
+    typeof value['task'] !== 'string' ||
+    typeof value['expectedPayloadDigest'] !== 'string' ||
+    typeof value['expectedTaskContextDigest'] !== 'string' ||
+    !isRecord(value['resource'] as JsonValue) ||
+    !isRecord(value['expectedSigner'] as JsonValue)
+  )
+    throw new ServiceError('INVALID_INPUT', 'verification context is invalid');
+  return {
+    audience: value['audience'],
+    action: value['action'],
+    resource: value['resource'] as { readonly type: string; readonly value: string },
+    task: value['task'],
+    expectedSigner: value['expectedSigner'] as never,
+    expectedPayloadDigest: value['expectedPayloadDigest'],
+    expectedTaskContextDigest: value['expectedTaskContextDigest'],
+    replayRequired: value['replayRequired'] === true
+  };
+}
+
 function trustResponse(snapshot: TrustSnapshot): Record<string, unknown> {
   return { snapshot };
 }
@@ -176,6 +355,7 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
     throw new Error('Local API refuses non-loopback binding. Remote exposure is not implemented.');
   const maxBodyBytes = options.maxBodyBytes ?? defaultMaxBodyBytes;
   const reloadFailureLimit = options.reloadFailureLimit ?? defaultReloadFailureLimit;
+  const now = options.now ?? (() => new Date());
   const nextRequestId = options.requestId ?? requestId;
   const reloadFailures = new Map<string, { count: number; resetAt: number }>();
 
@@ -224,6 +404,101 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
             credentialFrom(await readJson(request, maxBodyBytes))
           )
         );
+        return;
+      }
+      if (method === 'POST' && url.pathname === '/v1/delegations') {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'delegation persistence is not configured');
+        const submission = artifactSubmission(await readJson(request, maxBodyBytes), 'delegation');
+        await authorizeDelegationStorage(
+          options.service,
+          submission.artifact,
+          submission.evidence,
+          now()
+        );
+        const saved = await options.evidence.createDelegation(submission.artifact);
+        writeJson(response, 201, artifactResponse(saved, 'delegation'));
+        return;
+      }
+      if (
+        method === 'GET' &&
+        parts.length === 3 &&
+        parts[0] === 'v1' &&
+        parts[1] === 'delegations'
+      ) {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'delegation persistence is not configured');
+        const saved = await options.evidence.getDelegation(parts[2] ?? '');
+        if (saved === undefined)
+          throw new ServiceError('IDENTITY_NOT_FOUND', 'delegation was not found');
+        writeJson(response, 200, artifactResponse(saved, 'delegation'));
+        return;
+      }
+      if (method === 'GET' && url.pathname === '/v1/delegations') {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'delegation persistence is not configured');
+        const rawLimit = url.searchParams.get('limit');
+        const page = await options.evidence.listDelegations(
+          url.searchParams.get('cursor') ?? undefined,
+          rawLimit === null ? 25 : Number(rawLimit)
+        );
+        writeJson(response, 200, {
+          items: page.items.map((item) => artifactResponse(item, 'delegation')),
+          ...(page.nextCursor === undefined ? {} : { nextCursor: page.nextCursor })
+        });
+        return;
+      }
+      if (method === 'POST' && url.pathname === '/v1/revocations') {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'revocation persistence is not configured');
+        await readJson(request, maxBodyBytes);
+        throw new ServiceError(
+          'STATUS_AUTHORITY_REQUIRED',
+          'revocation persistence is unavailable until a separate configured status authority verifies the signed publisher stream'
+        );
+      }
+      if (
+        method === 'GET' &&
+        parts.length === 3 &&
+        parts[0] === 'v1' &&
+        parts[1] === 'revocations'
+      ) {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'revocation persistence is not configured');
+        const saved = await options.evidence.getRevocation(parts[2] ?? '');
+        if (saved === undefined)
+          throw new ServiceError('IDENTITY_NOT_FOUND', 'revocation was not found');
+        writeJson(response, 200, artifactResponse(saved, 'revocation'));
+        return;
+      }
+      if (method === 'GET' && url.pathname === '/v1/events') {
+        if (options.evidence === undefined)
+          throw new ServiceError('INVALID_INPUT', 'event persistence is not configured');
+        const rawLimit = url.searchParams.get('limit');
+        writeJson(
+          response,
+          200,
+          await options.evidence.listEvents(
+            url.searchParams.get('cursor') ?? undefined,
+            rawLimit === null ? 25 : Number(rawLimit)
+          )
+        );
+        return;
+      }
+      if (
+        method === 'POST' &&
+        (url.pathname === '/v1/verifications/delegation' ||
+          url.pathname === '/v1/verifications/request')
+      ) {
+        const input = verificationInput(await readJson(request, maxBodyBytes));
+        const result: VerificationResult = verifyArtifacts({
+          artifacts: input.artifacts,
+          trustSnapshot: (await options.service.readTrustSnapshot()) as never,
+          context: verificationContext(input.context),
+          now: now(),
+          replayMode: input.replayMode
+        });
+        writeJson(response, 200, result);
         return;
       }
       if (method === 'GET' && url.pathname === '/v1/agents') {

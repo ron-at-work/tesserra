@@ -15,6 +15,10 @@ test('contract exports versioned route and OpenAPI definitions', () => {
   assert.equal(apiBasePath, '/v1');
   assert.equal(routes.createIdentity, 'POST /v1/identities');
   assert.ok(openApiDocument.paths['/v1/verifications/identity']);
+  assert.ok(openApiDocument.paths['/v1/delegations']);
+  assert.ok(openApiDocument.paths['/v1/verifications/request']);
+  assert.ok(openApiDocument.paths['/v1/revocations']);
+  assert.ok(openApiDocument.paths['/v1/events']);
   assert.ok(openApiDocument.paths['/v1/trust-snapshots:reload']);
   assert.equal(
     isErrorEnvelope({ error: { code: 'X', message: 'x', details: [] }, requestId: 'request' }),

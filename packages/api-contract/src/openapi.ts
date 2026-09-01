@@ -26,6 +26,48 @@ export const openApiDocument = {
     '/v1/agents': {
       get: { operationId: 'listAgents', responses: { '200': { description: 'Agent page' } } }
     },
+    '/v1/delegations': {
+      post: {
+        operationId: 'createDelegation',
+        responses: { '201': { description: 'Delegation' } }
+      },
+      get: {
+        operationId: 'listDelegations',
+        responses: { '200': { description: 'Delegation page' } }
+      }
+    },
+    '/v1/delegations/{id}': {
+      get: { operationId: 'getDelegation', responses: { '200': { description: 'Delegation' } } }
+    },
+    '/v1/verifications/delegation': {
+      post: {
+        operationId: 'verifyDelegation',
+        responses: { '200': { description: 'Verification decision' } }
+      }
+    },
+    '/v1/verifications/request': {
+      post: {
+        operationId: 'verifyRequest',
+        responses: { '200': { description: 'Verification decision' } }
+      }
+    },
+    '/v1/revocations': {
+      post: {
+        operationId: 'revoke',
+        responses: {
+          '400': { description: 'STATUS_AUTHORITY_REQUIRED until a status authority is configured' }
+        }
+      }
+    },
+    '/v1/revocations/{id}': {
+      get: { operationId: 'getRevocation', responses: { '200': { description: 'Revocation' } } }
+    },
+    '/v1/events': {
+      get: {
+        operationId: 'listEvents',
+        responses: { '200': { description: 'Redacted verification events' } }
+      }
+    },
     '/v1/trust-anchors': {
       get: {
         operationId: 'readTrustSnapshot',

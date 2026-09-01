@@ -521,6 +521,71 @@
       ],
       "deliberate_schema_invalid": true,
       "deliberate_schema_invalid_reason": "verification_context omitted from otherwise complete case envelope"
+    },
+    {
+      "path": "cases/offline-audience-mismatch.json",
+      "class": [
+        "negative",
+        "complete-artifact",
+        "offline-inspection"
+      ],
+      "primary_code": "AUDIENCE_MISMATCH",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/offline-action-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact",
+        "offline-inspection"
+      ],
+      "primary_code": "ACTION_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/offline-resource-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact",
+        "offline-inspection"
+      ],
+      "primary_code": "RESOURCE_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/offline-task-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact",
+        "offline-inspection"
+      ],
+      "primary_code": "TASK_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/offline-revoked-delegation.json",
+      "class": [
+        "negative",
+        "complete-artifact",
+        "offline-inspection"
+      ],
+      "primary_code": "REVOKED",
+      "secondary_codes": [],
+      "threats": [
+        "V-REVOCATION"
+      ]
     }
   ]
 }

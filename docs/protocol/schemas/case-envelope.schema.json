@@ -67,19 +67,12 @@
       "$ref": "common.schema.json#/$defs/timestamp"
     },
     "replay_mode": {
-      "enum": [
-        "online",
-        "offline"
-      ]
+      "enum": ["online", "offline"]
     },
     "replay_state": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "consumed_request_ids",
-        "consumed_nonces",
-        "retention_until"
-      ],
+      "required": ["consumed_request_ids", "consumed_nonces", "retention_until"],
       "properties": {
         "consumed_request_ids": {
           "type": "array",

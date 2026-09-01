@@ -5,14 +5,14 @@
 
 ## Contents
 
-| Document | Purpose |
-| --- | --- |
-| [Research method](research-method.md) | Evidence rules, status taxonomy, date discipline, and limitations. |
-| [Source register](source-register.md) | Dated, version-pinned primary sources and the claims for which each is used or explicitly not used. |
-| [Capability matrix](capability-matrix.md) | Capability-by-capability comparison and **Reuse / Map-profile / Avoid reimplementation / Define** disposition. |
-| [Boundary and mapping](boundary-and-mapping.md) | Protocol-neutral concepts, non-equivalence rules, and MCP/SPIFFE/A2A adapter boundaries. |
-| [Scenarios](scenarios.md) | Concrete boundary scenarios and expected evidence ownership. |
-| [Open questions and change watch](open-questions-and-change-watch.md) | Decisions deliberately deferred, draft status, and refresh triggers. |
+| Document                                                              | Purpose                                                                                                        |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [Research method](research-method.md)                                 | Evidence rules, status taxonomy, date discipline, and limitations.                                             |
+| [Source register](source-register.md)                                 | Dated, version-pinned primary sources and the claims for which each is used or explicitly not used.            |
+| [Capability matrix](capability-matrix.md)                             | Capability-by-capability comparison and **Reuse / Map-profile / Avoid reimplementation / Define** disposition. |
+| [Boundary and mapping](boundary-and-mapping.md)                       | Protocol-neutral concepts, non-equivalence rules, and MCP/SPIFFE/A2A adapter boundaries.                       |
+| [Scenarios](scenarios.md)                                             | Concrete boundary scenarios and expected evidence ownership.                                                   |
+| [Open questions and change watch](open-questions-and-change-watch.md) | Decisions deliberately deferred, draft status, and refresh triggers.                                           |
 
 ## Status vocabulary
 

@@ -4,7 +4,7 @@
 
 The public API is loopback-only by default. It binds to an explicit local endpoint, rejects non-loopback binding unless an operator deliberately enables remote exposure, and documents the exposure authentication, TLS, firewall, origin, and threat-model requirements before enabling it. No implementation should describe a local binding as safe in a hostile local-user environment.
 
-`api-contract` owns public HTTP models, endpoint definitions, and OpenAPI inputs. `api-client` owns generated/reviewed typed client behavior. `api-server` binds the contract to service interfaces inside `host-local`. Dashboard, SDK, and CLI consume only the contract/client boundary; none imports or transits through service, storage, crypto, host, or server packages.
+`api-contract` owns public HTTP models, endpoint definitions, and OpenAPI inputs. `api-client` owns generated/reviewed typed client behavior. `api-server` binds the contract to service interfaces inside `host-local`. Dashboard, SDK, and CLI must stay on the public typed API boundary; none may import or transit through service, storage, crypto, host, server, or adapter packages. The dashboard currently owns a small compatible HTTP client while `api-client` remains the consolidation target.
 
 All HTTP endpoints use generated/reviewed OpenAPI derived from the same API contract types, typed request/response validation, a stable error envelope, pagination for collections, and idempotency for mutation routes where retries can duplicate effect. Event output is redacted according to data architecture.
 
@@ -16,20 +16,22 @@ All HTTP endpoints use generated/reviewed OpenAPI derived from the same API cont
 - State-changing POST routes accept an idempotency key when the operation can be retried; request identity/replay is protocol-specific and is not replaced by the HTTP key.
 - OpenAPI documents public transport contracts only. It does not expose provider references, local secrets, raw nonce values, unredacted evidence, or storage controls.
 
-## Phase surfaces
+## Current and planned surfaces
 
-| Phase | API routes (future) | CLI commands (future) | SDK boundary |
-| --- | --- | --- | --- |
-| 1 Identity primitives | `POST /v1/identities`; `GET /v1/identities/{id}`; `GET /v1/trust-anchors`; authenticated local `POST /v1/trust-snapshots:reload` only | `agentctl init`; `agentctl identity create`; `agentctl identity inspect`; `agentctl trust reload` | `verifyIdentity` offline; typed identity/trust client |
-| 2 Delegation | `POST /v1/delegations`; `GET /v1/delegations/{id}`; `POST /v1/verifications/delegation` | `agentctl delegation create|inspect|verify` | typed issuance/inspection and chain verification |
-| 3 Signed requests | `POST /v1/requests/verify`; request/status lookup only where redaction permits | `agentctl request sign|verify` | signed request helpers and verification client |
-| 4 Revocation/rotation | `POST /v1/revocations`; `GET /v1/revocations`; `POST /v1/identities/{id}/rotate`; `GET /v1/keys/{id}` | `agentctl revoke`; `agentctl revoked`; `agentctl identity rotate` | lifecycle/status client |
-| 5 Provenance | `GET /v1/verification-events`; `GET /v1/verification-events/{id}`; `GET /v1/provenance`; `GET /v1/provenance/{id}` | `agentctl event inspect`; `agentctl provenance export` | list/filter/graph/export helpers |
-| 6 MCP | No new generic core route; adapter-specific negotiated binding only | adapter diagnostic commands if justified | MCP middleware/helper package |
-| 7 SPIFFE | No core route; configured provider status/diagnostics only if threat modeled | SPIFFE adapter diagnostics if justified | SPIFFE provider adapter |
-| 8 A2A | No core route; negotiated binding only | A2A adapter diagnostics if justified | A2A sender/receiver helpers |
-| 9 Dashboard | Consumes above local API through `api-client`; no privileged backchannel | none required | typed API client only |
-| 10 Landing | none; static public content | none | none |
+| Phase              | Current status | Implemented boundary                                                                             | Remaining work                                                           |
+| ------------------ | -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| 1 Identity         | Implemented    | Identity/trust CLI, loopback identity API, typed client, offline `verifyIdentity`                | Production issuer/trust configuration is deployment-owned.               |
+| 2 Delegation       | Partial        | Core/service creation helper, SDK verifier, HTTP verification endpoint, conformance cases        | CLI issuance and loopback delegation storage/listing routes.             |
+| 3 Signed requests  | Partial        | Core/service creation helper, SDK verifier, HTTP verification endpoint, SQLite replay primitives | CLI signing, request submission/operator workflow, complete online gate. |
+| 4 Lifecycle        | Partial        | Protocol evidence and storage primitives                                                         | Revocation/rotation host API, CLI, lifecycle workflows, and gate.        |
+| 5 Provenance       | Partial        | Artifact schema and core/service creation helper                                                 | Events, graph/list/export/redaction HTTP/SDK/CLI surfaces.               |
+| 6 MCP              | Partial        | Adapter helper package with explicit proof metadata binding                                      | Version-pinned integration compatibility matrix and production policy.   |
+| 7 SPIFFE           | Partial        | Adapter provider mapping package                                                                 | Hermetic SPIRE integration gate and operations diagnostics.              |
+| 8 A2A              | Partial        | Adapter negotiated-extension helper package                                                      | Compatibility matrix and deployment integration gate.                    |
+| 9 Dashboard        | Partial        | Separate typed local-API client application                                                      | Full operational/lifecycle/provenance data surfaces.                     |
+| 10 Landing/release | Partial        | Separate static application, docs/example checks, benchmark and release workflow                 | Publication and full release-gate evidence.                              |
+
+The API contract may declare a future route before the loopback server serves it. The [local API reference](../api/local-api.md) is authoritative for served routes; a declared contract/client method must not be represented as available service behavior.
 
 Trust anchors are not writable through a generic `PUT /v1/trust-anchors`. Trust changes are local configuration changes, not ordinary HTTP resource edits. The only proposed transport action is authenticated loopback reload: it validates a complete locally configured candidate snapshot, verifies identity/policy hash/monotonic sequence, atomically selects it, and emits a redacted audit event. It accepts neither raw trust-anchor material nor discovery URLs from the caller. The local authentication/authorization mechanism remains an explicit Phase 1 security decision.
 

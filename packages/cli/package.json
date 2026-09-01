@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@agent-proof/protocol": "workspace:*",
+    "@agent-proof/core": "workspace:*",
+    "@agent-proof/storage-sqlite": "workspace:*",
     "@agent-proof/sdk": "workspace:*",
     "@agent-proof/api-contract": "workspace:*",
     "@agent-proof/api-client": "workspace:*",

@@ -11,14 +11,14 @@ Every ADR below has both statuses because this milestone is documentation-only. 
 
 ## ADR index
 
-| ADR | Decision |
-| --- | --- |
-| [0001](0001-runtime-language-and-package-boundaries.md) | Node 24, pnpm, strict TypeScript, ESM, and one-way package boundaries |
-| [0002](0002-protocol-schema-canonicalization-and-core-ports.md) | Schema ownership, canonical wire bytes, deterministic core, and ports |
-| [0003](0003-local-keys-sqlite-and-data-lifecycle.md) | Encrypted local keys, SQLite, migrations, sensitivity, and retention |
-| [0004](0004-local-api-cli-sdk-and-adapters.md) | Loopback typed API, OpenAPI, CLI/SDK, configuration, and adapters |
-| [0005](0005-web-surfaces-testing-and-release.md) | Separate web surfaces, quality strategy, release, versioning, and compatibility |
-| [0006](0006-milestone-one-no-code-unlock-gate.md) | Documentation-only gate and implementation unlock |
+| ADR                                                             | Decision                                                                        |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [0001](0001-runtime-language-and-package-boundaries.md)         | Node 24, pnpm, strict TypeScript, ESM, and one-way package boundaries           |
+| [0002](0002-protocol-schema-canonicalization-and-core-ports.md) | Schema ownership, canonical wire bytes, deterministic core, and ports           |
+| [0003](0003-local-keys-sqlite-and-data-lifecycle.md)            | Encrypted local keys, SQLite, migrations, sensitivity, and retention            |
+| [0004](0004-local-api-cli-sdk-and-adapters.md)                  | Loopback typed API, OpenAPI, CLI/SDK, configuration, and adapters               |
+| [0005](0005-web-surfaces-testing-and-release.md)                | Separate web surfaces, quality strategy, release, versioning, and compatibility |
+| [0006](0006-milestone-one-no-code-unlock-gate.md)               | Documentation-only gate and implementation unlock                               |
 
 ## Non-goals
 

@@ -10,7 +10,7 @@ test('all complete conformance cases reproduce the frozen full result', async ()
   const filenames = await readdir(cases);
   assert.equal(
     filenames.length,
-    37,
+    42,
     'fixture count changed: update this assertion with the manifest'
   );
   for (const filename of filenames) {

@@ -1,5 +1,9 @@
 import { LocalApiClient } from '@agent-proof/api-client';
-import { verifyIdentityCredential } from '@agent-proof/core';
+import {
+  verifyArtifacts,
+  verifyIdentityCredential,
+  type VerificationInput
+} from '@agent-proof/core';
 import {
   isTimestamp,
   validAgentId,
@@ -75,4 +79,55 @@ export function verifyIdentity(input: VerifyIdentityInput): VerificationResult {
     trustSnapshot: input.trustSnapshot,
     now: verificationNow(input.now)
   });
+}
+
+export interface VerifyArtifactsInput {
+  readonly artifacts: readonly ArtifactBase[];
+  readonly trustSnapshot: JsonObject;
+  readonly context: VerificationInput['context'];
+  readonly now?: string | Date;
+  readonly replayMode?: VerificationInput['replayMode'];
+  readonly replay?: VerificationInput['replay'];
+  readonly archivedSnapshot?: JsonObject;
+}
+
+/**
+ * Verify delegation evidence in its intended request context. The core verifier
+ * owns all chain, attenuation, trust, and signature decisions.
+ */
+export function verifyDelegation(input: VerifyArtifactsInput): VerificationResult {
+  if (!input.artifacts.some((artifact) => artifact.kind === 'delegation'))
+    throw new TypeError('artifacts must contain a delegation');
+  return verifyRequest(input);
+}
+
+/** Verify a signed request and its supplied credential/delegation evidence. */
+export function verifyRequest(input: VerifyArtifactsInput): VerificationResult {
+  return verifyArtifacts({
+    artifacts: input.artifacts,
+    trustSnapshot: input.trustSnapshot,
+    context: input.context,
+    now: verificationNow(input.now),
+    replayMode: input.replayMode ?? 'offline',
+    ...(input.replay === undefined ? {} : { replay: input.replay }),
+    ...(input.archivedSnapshot === undefined ? {} : { archivedSnapshot: input.archivedSnapshot })
+  });
+}
+
+/** Check an exact capability string in a decoded constraint set. */
+export function hasCapability(
+  constraints: { readonly capabilities: readonly string[] },
+  capability: string
+): boolean {
+  return constraints.capabilities.includes(capability);
+}
+
+/** Check exact, mechanically decidable resource membership. */
+export function isAuthorizedForResource(
+  constraints: { readonly resources: readonly { readonly type: string; readonly value: string }[] },
+  resource: { readonly type: string; readonly value: string }
+): boolean {
+  return constraints.resources.some(
+    (candidate) => candidate.type === resource.type && candidate.value === resource.value
+  );
 }

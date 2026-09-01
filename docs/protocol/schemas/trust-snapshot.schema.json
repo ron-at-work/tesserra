@@ -52,10 +52,7 @@
       "maximum": 8
     },
     "replay_policy": {
-      "enum": [
-        "online-required",
-        "offline-inspection-only"
-      ]
+      "enum": ["online-required", "offline-inspection-only"]
     },
     "issuer_authorities": {
       "type": "array",
@@ -63,11 +60,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "principal",
-          "key_id",
-          "public_jwk"
-        ],
+        "required": ["principal", "key_id", "public_jwk"],
         "properties": {
           "principal": {
             "$ref": "common.schema.json#/$defs/principal"
@@ -87,11 +80,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "principal",
-          "key_id",
-          "public_jwk"
-        ],
+        "required": ["principal", "key_id", "public_jwk"],
         "properties": {
           "principal": {
             "$ref": "common.schema.json#/$defs/principal"
@@ -111,11 +100,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "issuer",
-          "root_subject",
-          "credential_purpose"
-        ],
+        "required": ["issuer", "root_subject", "credential_purpose"],
         "properties": {
           "issuer": {
             "$ref": "common.schema.json#/$defs/principal"
@@ -134,12 +119,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "publisher",
-          "target_key_id",
-          "sequence",
-          "semantic_digest"
-        ],
+        "required": ["publisher", "target_key_id", "sequence", "semantic_digest"],
         "properties": {
           "publisher": {
             "$ref": "common.schema.json#/$defs/principal"
@@ -160,10 +140,7 @@
     "archival_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "historical_verification",
-        "minimum_retention_seconds"
-      ],
+      "required": ["historical_verification", "minimum_retention_seconds"],
       "properties": {
         "historical_verification": {
           "const": "explicit-snapshot-only"

@@ -55,7 +55,10 @@ export type WarningCode =
   | 'OFFLINE_REPLAY_NOT_CHECKED'
   | 'HISTORICAL_SNAPSHOT';
 export type JsonPrimitive = null | boolean | number | string;
-export type JsonValue = JsonPrimitive | JsonValue[] | { readonly [key: string]: JsonValue };
+export type JsonValue =
+  | JsonPrimitive
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue | readonly JsonValue[] };
 export type JsonObject = { readonly [key: string]: JsonValue } & {
   readonly version?: JsonValue;
   readonly kind?: JsonValue;
@@ -126,16 +129,19 @@ export type JsonObject = { readonly [key: string]: JsonValue } & {
   readonly value?: JsonValue;
 };
 export interface AgentId {
+  readonly [key: string]: JsonValue;
   readonly scheme: 'agid';
   readonly version: 1;
   readonly authority: string;
   readonly path: readonly string[];
 }
 export interface Principal {
+  readonly [key: string]: JsonValue;
   readonly type: 'human' | 'service' | 'agent' | 'workload' | 'oauth_client' | 'model';
   readonly id: string | AgentId;
 }
 export interface PublicJwk {
+  readonly [key: string]: JsonValue;
   readonly kty: 'OKP';
   readonly crv: 'Ed25519';
   readonly x: string;
@@ -147,10 +153,12 @@ export interface Proof {
   readonly [key: string]: JsonValue;
 }
 export interface Resource {
+  readonly [key: string]: JsonValue;
   readonly type: string;
   readonly value: string;
 }
 export interface Constraints {
+  readonly [key: string]: JsonValue;
   readonly capabilities: readonly string[];
   readonly resources: readonly Resource[];
   readonly tasks: readonly string[];

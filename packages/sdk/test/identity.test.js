@@ -5,7 +5,13 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'vitest';
 import { policyHashFor } from '@agent-proof/protocol';
-import { formatAgentId, parseAgentId, verifyIdentity } from '../dist/src/index.js';
+import {
+  formatAgentId,
+  hasCapability,
+  isAuthorizedForResource,
+  parseAgentId,
+  verifyIdentity
+} from '../dist/src/index.js';
 
 const cli = resolve(import.meta.dirname, '../../cli/dist/src/agentctl.js');
 
@@ -78,6 +84,23 @@ test('Agent ID helpers preserve the structured protocol value', () => {
   });
   assert.equal(formatAgentId(agent), 'agid:v1:example.com/release/bot');
   assert.throws(() => parseAgentId('agid:v1:Example.com/bot'), /invalid/i);
+});
+
+test('capability and resource helpers use exact matching semantics', () => {
+  const constraints = {
+    capabilities: ['files.read'],
+    resources: [{ type: 'uri', value: 'https://example.test/files/1' }]
+  };
+  assert.equal(hasCapability(constraints, 'files.read'), true);
+  assert.equal(hasCapability(constraints, 'files.*'), false);
+  assert.equal(
+    isAuthorizedForResource(constraints, { type: 'uri', value: 'https://example.test/files/1' }),
+    true
+  );
+  assert.equal(
+    isAuthorizedForResource(constraints, { type: 'uri', value: 'https://example.test/files/2' }),
+    false
+  );
 });
 
 test('verifyIdentity delegates a generated identity to the core verifier', () => {

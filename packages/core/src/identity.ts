@@ -38,7 +38,7 @@ function decision(
     code,
     valid: code === 'VALID',
     decision_version: protocol,
-    verifier_now: now.toISOString().replace('.000Z', 'Z'),
+    verifier_now: utcSeconds(now),
     policy_hash: policyHash,
     status_snapshot_hash: statusHash,
     evidence_ids: evidenceIds,
@@ -56,12 +56,18 @@ function policyHash(snapshot: JsonObject): string {
   try {
     return policyHashFor(snapshot);
   } catch {
-    return 'urn:agent-proof:policy:v1:sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+    // A malformed policy is never attributed to the all-zero fallback hash.
+    return policyHashFor({ invalid_policy_snapshot: true });
   }
+}
+function utcSeconds(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
 function asObject(value: JsonValue | undefined): JsonObject | undefined {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as JsonObject)
+    : undefined;
 }
 
 function asPrincipal(value: JsonValue | undefined): Principal | undefined {

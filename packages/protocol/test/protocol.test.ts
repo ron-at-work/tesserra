@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { canonicalize, decodeBase64Url, keyIdFor, parseStrictJson } from '../src/index.js';
+import {
+  canonicalize,
+  decodeBase64Url,
+  keyIdFor,
+  parseStrictJson,
+  sha256DigestFor
+} from '../src/index.js';
 
 test('RFC 8785 canonicalization orders object members', () => {
   assert.equal(canonicalize({ z: [true, 'x'], a: 1 }), '{"a":1,"z":[true,"x"]}');
@@ -15,6 +21,12 @@ test('key identifiers use frozen public JWK preimages', () => {
   assert.equal(
     keyIdFor({ kty: 'OKP', crv: 'Ed25519', x: 'rkZEP2c-WyDmfpqJVWSoRNoqBJUzUJSKi2Drd0fSD_w' }),
     'urn:agent-proof:kid:v1:sha256:ZBX6j1I82CWRmCIG2Czu3Uvr5Ju33qrnRqU7Zwm5OOs'
+  );
+});
+test('request digest helper returns the real SHA-256 digest', () => {
+  assert.equal(
+    sha256DigestFor(new TextEncoder().encode('abc')),
+    'sha256:ungWv48Bz-pBQUDeXa4iI7ADYaOWF3qctBD_YfIAFa0'
   );
 });
 test('canonicalization rejects unpaired surrogate object keys', () => {

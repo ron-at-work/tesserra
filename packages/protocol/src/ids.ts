@@ -34,9 +34,8 @@ export const signingInputFor = (artifact: ArtifactBase): Uint8Array =>
     Buffer.from([0]),
     Buffer.from(canonicalBytes(omit(artifact as JsonObject, ['proof'])))
   ]);
+/** SHA-256 content digest used by signed payload and task-context bindings. */
+export const sha256DigestFor = (value: Uint8Array): string =>
+  `sha256:${encodeBase64Url(createHash('sha256').update(value).digest())}`;
 export const semanticDigestFor = (artifact: ArtifactBase): string =>
-  `sha256:${encodeBase64Url(
-    createHash('sha256')
-      .update(canonicalBytes(omit(artifact as JsonObject, ['proof'])))
-      .digest()
-  )}`;
+  sha256DigestFor(canonicalBytes(omit(artifact as JsonObject, ['proof'])));

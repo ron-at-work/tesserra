@@ -1,3 +1,4 @@
+export * from './artifacts.js';
 export * from './base64url.js';
 export * from './canonical.js';
 export * from './ids.js';

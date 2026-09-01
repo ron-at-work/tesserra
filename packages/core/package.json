@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "fast-check": "4.8.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

@@ -77,6 +77,42 @@ export interface ListAgentsResponse {
   readonly nextCursor?: string;
 }
 
+/** Signed protocol artifacts remain opaque to the HTTP transport. */
+export type ArtifactDto = Record<string, JsonValue>;
+
+export interface CreateDelegationRequest {
+  readonly delegation: ArtifactDto;
+  readonly artifacts?: readonly ArtifactDto[];
+}
+export interface DelegationResponse {
+  readonly id: string;
+  readonly delegation: ArtifactDto;
+  readonly createdAt?: string;
+}
+export interface ListDelegationsResponse {
+  readonly items: readonly DelegationResponse[];
+  readonly nextCursor?: string;
+}
+export interface VerifyArtifactsRequest {
+  readonly artifacts: readonly ArtifactDto[];
+  readonly context: Record<string, JsonValue>;
+  readonly replayMode?: 'online' | 'offline';
+}
+/** Accepted route shape; the default local profile returns STATUS_AUTHORITY_REQUIRED. */
+export interface RevokeRequest {
+  readonly revocation: ArtifactDto;
+  readonly artifacts?: readonly ArtifactDto[];
+}
+export interface RevocationResponse {
+  readonly id: string;
+  readonly revocation: ArtifactDto;
+  readonly createdAt?: string;
+}
+export interface ListEventsResponse {
+  readonly items: readonly Record<string, JsonValue>[];
+  readonly nextAfterId?: string;
+}
+
 /** Sensitive trust policy is read-only over HTTP and contains no private material. */
 export interface TrustSnapshotResponse {
   readonly snapshot: Record<string, unknown>;
@@ -91,6 +127,14 @@ export const routes = {
   getIdentity: 'GET /v1/identities/{id}',
   verifyIdentity: 'POST /v1/verifications/identity',
   listAgents: 'GET /v1/agents',
+  createDelegation: 'POST /v1/delegations',
+  getDelegation: 'GET /v1/delegations/{id}',
+  listDelegations: 'GET /v1/delegations',
+  verifyDelegation: 'POST /v1/verifications/delegation',
+  verifyRequest: 'POST /v1/verifications/request',
+  revoke: 'POST /v1/revocations',
+  getRevocation: 'GET /v1/revocations/{id}',
+  listEvents: 'GET /v1/events',
   readTrustSnapshot: 'GET /v1/trust-anchors',
   reloadTrustSnapshot: 'POST /v1/trust-snapshots:reload'
 } as const;

@@ -1,3 +1,5 @@
+export * from './workflows.js';
+
 import {
   artifactIdFor,
   keyIdFor,
@@ -5,7 +7,8 @@ import {
   signingInputFor,
   validAgentId
 } from '@agent-proof/protocol';
-import { verifyIdentityCredential } from '@agent-proof/core';
+import { verifyArtifacts, verifyIdentityCredential } from '@agent-proof/core';
+export { verifyArtifacts, verifyDelegationChain } from '@agent-proof/core';
 import type {
   AgentId,
   ArtifactBase,
@@ -17,6 +20,7 @@ import type {
   VerificationResult as CoreVerificationResult
 } from '@agent-proof/protocol';
 import type { Clock, KeyProvider } from '@agent-proof/core';
+export * from './workflows.js';
 /**
  * Application use cases and ports for local identity operations. Concrete
  * storage, key, and verifier implementations belong to the composition host.
@@ -111,6 +115,7 @@ export type ServiceErrorCode =
   | 'INVALID_INPUT'
   | 'TRUST_RELOAD_FORBIDDEN'
   | 'TRUST_SNAPSHOT_INVALID'
+  | 'STATUS_AUTHORITY_REQUIRED'
   | 'INTERNAL';
 
 export class ServiceError extends Error {

@@ -14,13 +14,16 @@
     "build": "corepack pnpm -r --workspace-concurrency=1 run build",
     "test": "corepack pnpm -r --workspace-concurrency=1 run test",
     "typecheck": "corepack pnpm -r --workspace-concurrency=1 run typecheck",
-    "lint": "corepack pnpm run lint:format && corepack pnpm run lint:eslint && corepack pnpm run check:boundaries",
+    "lint": "corepack pnpm run lint:format && corepack pnpm run lint:eslint && corepack pnpm run check:boundaries && corepack pnpm run check:docs",
     "lint:eslint": "eslint --max-warnings=0 eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts tooling packages",
-    "lint:format": "prettier --check .github config tooling packages CONTRIBUTING.md README.md SECURITY.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
-    "format": "prettier --write .github config tooling packages CONTRIBUTING.md README.md SECURITY.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
+    "lint:format": "prettier --check .github config tooling packages apps docs examples CONTRIBUTING.md README.md SECURITY.md CHANGELOG.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
+    "format": "prettier --write .github config tooling packages apps docs examples CONTRIBUTING.md README.md SECURITY.md CHANGELOG.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
     "check:boundaries": "node tooling/check-package-boundaries.mjs",
+    "check:docs": "node tooling/check-doc-examples.mjs",
     "test:clean-clone": "node tooling/test-clean-clone.mjs",
-    "benchmark": "node tooling/benchmark-placeholder.mjs"
+    "benchmark": "node tooling/benchmark.mjs",
+    "dev:landing": "node tooling/run-app.mjs landing",
+    "dev:dashboard": "node tooling/run-app.mjs dashboard"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",

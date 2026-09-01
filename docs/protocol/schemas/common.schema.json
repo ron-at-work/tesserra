@@ -6,10 +6,7 @@
     "protocol_identity": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "version",
-        "kind"
-      ],
+      "required": ["version", "kind"],
       "properties": {
         "version": {
           "type": "string"
@@ -61,12 +58,7 @@
     "agent_id": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "scheme",
-        "version",
-        "authority",
-        "path"
-      ],
+      "required": ["scheme", "version", "authority", "path"],
       "properties": {
         "scheme": {
           "const": "agid"
@@ -91,20 +83,10 @@
     "principal": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "type",
-        "id"
-      ],
+      "required": ["type", "id"],
       "properties": {
         "type": {
-          "enum": [
-            "human",
-            "service",
-            "agent",
-            "workload",
-            "oauth_client",
-            "model"
-          ]
+          "enum": ["human", "service", "agent", "workload", "oauth_client", "model"]
         },
         "id": {}
       },
@@ -138,11 +120,7 @@
     "jwk": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kty",
-        "crv",
-        "x"
-      ],
+      "required": ["kty", "crv", "x"],
       "properties": {
         "kty": {
           "const": "OKP"
@@ -158,11 +136,7 @@
     "proof": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "alg",
-        "kid",
-        "sig"
-      ],
+      "required": ["alg", "kid", "sig"],
       "properties": {
         "alg": {
           "type": "string"
@@ -178,10 +152,7 @@
     "ref": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "kind"
-      ],
+      "required": ["id", "kind"],
       "properties": {
         "id": {
           "$ref": "#/$defs/artifact_id"
@@ -202,10 +173,7 @@
     "resource": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "type",
-        "value"
-      ],
+      "required": ["type", "value"],
       "properties": {
         "type": {
           "type": "string"

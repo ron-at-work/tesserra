@@ -1,0 +1,18 @@
+# Roadmap and implementation status
+
+Product naming is presentation configuration, not a protocol namespace. Status describes this repository branch, not a standards endorsement or a release-date commitment. “Partial” means code or fixtures exist but the listed phase gate is not complete; do not infer a production-ready workflow from it.
+
+| Phase | Outcome                                                | Current status                                                                                                                                                                                   |
+| ----- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | Identity primitives, local trust, offline verification | Implemented: local CLI identity/trust workflow, loopback identity API, SDK verification, storage/key foundations.                                                                                |
+| 2     | Parent-linked delegation and attenuation               | Partial: deterministic artifact/core/service helpers, SDK verifier, conformance cases, and HTTP verification endpoint exist. CLI issuance and hosted delegation storage are not released.        |
+| 3     | Signed requests and replay consumption                 | Partial: deterministic helpers, fixture verification, SDK verifier, HTTP verification endpoint, and SQLite replay primitives exist. CLI signing and complete operator workflow are not released. |
+| 4     | Revocation and rotation lifecycle                      | Partial: protocol fixtures and storage primitives exist. The lifecycle API/CLI and end-to-end operational gate remain incomplete.                                                                |
+| 5     | Verification events and provenance graph               | Partial: provenance artifact helper/schema exists. Event, graph, export, and redaction surfaces remain incomplete.                                                                               |
+| 6     | MCP proof propagation adapter                          | Partial adapter helper package with explicit metadata binding and tests; it does not replace MCP OAuth or claim arbitrary-client compatibility.                                                  |
+| 7     | SPIFFE/SPIRE workload-identity adapter                 | Partial provider-mapping package with tests; it consumes validated Workload API material and does not equate workloads with agents.                                                              |
+| 8     | A2A proof-binding adapter                              | Partial negotiated-extension helper package with tests; it does not implement A2A.                                                                                                               |
+| 9     | Local operations dashboard                             | Implemented application shell with typed local-API boundary and state/accessibility tests. It does not make unavailable lifecycle/provenance routes available.                                   |
+| 10    | Public landing and release completion                  | Partial: separate static landing application, docs/example checks, benchmark, and release-artifact workflow exist. Publication and the complete release gate remain future work.                 |
+
+See [adapter boundaries](../adapters/README.md), [quality/release architecture](../architecture/quality-and-release-architecture.md), and the [requirements traceability ledger](../requirements-traceability.md) for the phase gates.

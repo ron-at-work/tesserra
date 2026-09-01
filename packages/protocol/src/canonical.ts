@@ -13,15 +13,17 @@ export function canonicalize(value: JsonValue): string {
       if (!Number.isFinite(value) || (!Number.isSafeInteger(value) && Number.isInteger(value)))
         throw new TypeError('Non-I-JSON number');
       return Object.is(value, -0) ? '0' : JSON.stringify(value);
-    case 'object':
+    case 'object': {
       if (Array.isArray(value)) return `[${value.map(canonicalize).join(',')}]`;
-      return `{${Object.keys(value)
+      const object = value as { readonly [key: string]: JsonValue | readonly JsonValue[] };
+      return `{${Object.keys(object)
         .sort()
         .map((key) => {
           assertUnicodeScalars(key);
-          return `${JSON.stringify(key)}:${canonicalize(value[key]!)}`;
+          return `${JSON.stringify(key)}:${canonicalize(object[key]! as JsonValue)}`;
         })
         .join(',')}}`;
+    }
   }
 }
 export function canonicalBytes(value: JsonValue): Uint8Array {

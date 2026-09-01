@@ -37,11 +37,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -73,10 +69,7 @@
           "$ref": "common.schema.json#/$defs/timestamp"
         },
         "credential_purpose": {
-          "enum": [
-            "agent-root-authority",
-            "agent-key-binding"
-          ]
+          "enum": ["agent-root-authority", "agent-key-binding"]
         },
         "authority_ceiling": {
           "$ref": "common.schema.json#/$defs/constraints"
@@ -113,11 +106,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -182,11 +171,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -203,7 +188,18 @@
           "$ref": "common.schema.json#/$defs/principal"
         },
         "delegation_ref": {
-          "$ref": "common.schema.json#/$defs/ref"
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/ref"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "delegation"
+                }
+              }
+            }
+          ]
         },
         "request_id": {
           "$ref": "common.schema.json#/$defs/uuidv7"
@@ -224,16 +220,10 @@
         "resource": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "type",
-            "value"
-          ],
+          "required": ["type", "value"],
           "properties": {
             "type": {
-              "enum": [
-                "uri",
-                "opaque"
-              ]
+              "enum": ["uri", "opaque"]
             },
             "value": {
               "type": "string"
@@ -287,11 +277,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -320,10 +306,7 @@
         "subject": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "name",
-            "digest"
-          ],
+          "required": ["name", "digest"],
           "properties": {
             "name": {
               "type": "string"
@@ -417,11 +400,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -464,12 +443,7 @@
           "$ref": "common.schema.json#/$defs/key_id"
         },
         "state": {
-          "enum": [
-            "active",
-            "retired",
-            "compromised",
-            "revoked"
-          ]
+          "enum": ["active", "retired", "compromised", "revoked"]
         }
       }
     },
@@ -508,11 +482,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"
@@ -552,11 +522,7 @@
           ]
         },
         "target_type": {
-          "enum": [
-            "credential",
-            "key",
-            "delegation"
-          ]
+          "enum": ["credential", "key", "delegation"]
         },
         "target_id": {
           "type": "string"
@@ -599,11 +565,7 @@
         "proof": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
+          "required": ["alg", "kid", "sig"],
           "properties": {
             "alg": {
               "const": "Ed25519"

@@ -157,6 +157,7 @@ export function validateArtifact(value: unknown): value is ArtifactBase {
         ) &&
         validPrincipal(artifact.signer) &&
         validRef(artifact.delegation_ref) &&
+        asObject(artifact.delegation_ref)?.kind === 'delegation' &&
         uuidV7.test(artifact.request_id as string) &&
         validB64(artifact.nonce, 32) &&
         isTimestamp(artifact.not_before) &&
@@ -280,7 +281,36 @@ export function validateArtifact(value: unknown): value is ArtifactBase {
         validPrincipal(artifact.publisher)
       );
     case 'provenance':
-      return false; // evidence format is frozen but outside Phase 1 identity surface.
+      return (
+        fields(
+          artifact,
+          [
+            ...common,
+            'authority_refs',
+            'request_ref',
+            'predicate_type',
+            'subject',
+            'predicate',
+            'predecessor_refs'
+          ],
+          [
+            ...common,
+            'authority_refs',
+            'request_ref',
+            'predicate_type',
+            'subject',
+            'predicate',
+            'predecessor_refs'
+          ]
+        ) &&
+        validReferences(artifact.authority_refs, ['credential', 'delegation'], true) &&
+        validRef(artifact.request_ref) &&
+        asObject(artifact.request_ref)?.kind === 'request' &&
+        artifact.predicate_type === 'https://agent-proof.invalid/spec/v1/provenance' &&
+        validProvenanceSubject(artifact.subject) &&
+        validProvenancePredicate(artifact.predicate) &&
+        validReferences(artifact.predecessor_refs, ['provenance'])
+      );
     default:
       return false;
   }
@@ -353,6 +383,55 @@ export function validResource(value: JsonValue | undefined): boolean {
     string(value.value) &&
     value.value.length >= 1 &&
     value.value.length <= 1024
+  );
+}
+function validReferences(
+  value: JsonValue | undefined,
+  kinds: readonly string[],
+  nonempty = false
+): boolean {
+  return (
+    Array.isArray(value) &&
+    (!nonempty || value.length > 0) &&
+    value.every((reference) => {
+      const objectValue = asObject(reference);
+      return (
+        objectValue !== undefined &&
+        validRef(objectValue) &&
+        kinds.includes(String(objectValue.kind))
+      );
+    })
+  );
+}
+function validProvenanceSubject(value: JsonValue | undefined): boolean {
+  const subject = asObject(value);
+  return (
+    subject !== undefined &&
+    fields(subject, ['name', 'digest'], ['name', 'digest']) &&
+    string(subject.name) &&
+    subject.name.length > 0 &&
+    digest.test(subject.digest as string)
+  );
+}
+function validDigestArray(value: JsonValue | undefined): boolean {
+  return Array.isArray(value) && value.every((item) => string(item) && digest.test(item));
+}
+function validProvenancePredicate(value: JsonValue | undefined): boolean {
+  const predicate = asObject(value);
+  return (
+    predicate !== undefined &&
+    fields(
+      predicate,
+      ['task', 'action', 'resource', 'audience', 'input_digests', 'output_digests', 'result'],
+      ['task', 'action', 'resource', 'audience', 'input_digests', 'output_digests', 'result']
+    ) &&
+    uuidV7.test(predicate.task as string) &&
+    action.test(predicate.action as string) &&
+    validResource(predicate.resource) &&
+    audience.test(predicate.audience as string) &&
+    validDigestArray(predicate.input_digests) &&
+    validDigestArray(predicate.output_digests) &&
+    string(predicate.result)
   );
 }
 export function validConstraints(value: JsonValue | undefined): boolean {

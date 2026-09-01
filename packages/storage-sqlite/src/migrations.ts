@@ -133,5 +133,34 @@ CREATE TABLE key_history (
 ) STRICT;
 CREATE INDEX key_history_recorded_at ON key_history (recorded_at DESC);
 `
+  ),
+  migration(
+    '0004_artifacts_revocations_provenance',
+    `
+CREATE TABLE signed_artifacts (
+  id TEXT PRIMARY KEY NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('delegation', 'request', 'provenance', 'key_status', 'revocation', 'key_rotation')),
+  artifact_json TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX signed_artifacts_kind_issued_at ON signed_artifacts (kind, issued_at DESC, id);
+CREATE TABLE revocations (
+  id TEXT PRIMARY KEY NOT NULL REFERENCES signed_artifacts(id) ON DELETE RESTRICT,
+  target_type TEXT NOT NULL CHECK (target_type IN ('credential', 'key', 'delegation')),
+  target_id TEXT NOT NULL,
+  effective_at TEXT NOT NULL,
+  artifact_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX revocations_target_effective ON revocations (target_type, target_id, effective_at);
+CREATE TABLE provenance_edges (
+  from_id TEXT NOT NULL REFERENCES signed_artifacts(id) ON DELETE RESTRICT,
+  to_id TEXT NOT NULL,
+  relation TEXT NOT NULL CHECK (relation IN ('authority', 'request', 'predecessor')),
+  PRIMARY KEY (from_id, to_id, relation)
+) STRICT;
+CREATE INDEX provenance_edges_to ON provenance_edges (to_id, relation);
+`
   )
 ];

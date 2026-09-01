@@ -40,6 +40,22 @@ test('client uses loopback default, encodes requests, and passes idempotency key
   assert.equal(requests[1]?.init?.headers?.['idempotency-key'], 'retry-key');
 });
 
+test('client exposes delegation, verification, revocation, and event routes', async () => {
+  const requests: string[] = [];
+  const client = new LocalApiClient({
+    fetch: async (url) => {
+      requests.push(url);
+      return response(200, { items: [] });
+    }
+  });
+  await client.listDelegations();
+  await client.listEvents();
+  assert.deepEqual(requests, [
+    'http://127.0.0.1:4318/v1/delegations',
+    'http://127.0.0.1:4318/v1/events'
+  ]);
+});
+
 test('client maps typed API failures to ApiClientError', async () => {
   const client = new LocalApiClient({
     fetch: async () =>

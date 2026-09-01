@@ -25,6 +25,23 @@ module.exports = {
         path: '^(packages/(?!protocol/)|apps/|node:(?!crypto$))',
         pathNot: '^packages/protocol/src/'
       }
+    },
+    {
+      name: 'apps-cannot-reach-operational-internals',
+      comment:
+        'Dashboard and landing are separate UI surfaces. They may use API contracts/client but never core, service, crypto, storage, host, server, or adapters.',
+      severity: 'error',
+      from: { path: '^apps/[^/]+/src/' },
+      to: {
+        path: '^packages/(core|crypto-local|storage-sqlite|service|api-server|host-local|adapter-[^/]+)/src/'
+      }
+    },
+    {
+      name: 'landing-is-static-public-surface',
+      comment: 'The landing surface may not import workspace package internals.',
+      severity: 'error',
+      from: { path: '^apps/landing/src/' },
+      to: { path: '^packages/' }
     }
   ],
   options: {

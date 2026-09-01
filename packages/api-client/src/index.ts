@@ -1,11 +1,18 @@
 import type {
+  CreateDelegationRequest,
   CreateIdentityRequest,
+  DelegationResponse,
   ErrorEnvelope,
   IdentityResponse,
   ListAgentsResponse,
+  ListDelegationsResponse,
+  ListEventsResponse,
   ReloadTrustSnapshotResponse,
+  RevokeRequest,
+  RevocationResponse,
   TrustSnapshotResponse,
   VerificationResponse,
+  VerifyArtifactsRequest,
   VerifyIdentityRequest
 } from '@agent-proof/api-contract';
 import { isErrorEnvelope } from '@agent-proof/api-contract';
@@ -82,6 +89,45 @@ export class LocalApiClient {
     return this.request('GET', `/v1/agents${query}`);
   }
 
+  public createDelegation(
+    request: CreateDelegationRequest,
+    idempotencyKey?: string
+  ): Promise<DelegationResponse> {
+    const headers: Record<string, string> = {};
+    if (idempotencyKey !== undefined) headers['idempotency-key'] = idempotencyKey;
+    return this.request('POST', '/v1/delegations', request, headers);
+  }
+
+  public getDelegation(id: string): Promise<DelegationResponse> {
+    return this.request('GET', `/v1/delegations/${encodeURIComponent(id)}`);
+  }
+
+  public listDelegations(cursor?: string, limit?: number): Promise<ListDelegationsResponse> {
+    return this.list('/v1/delegations', cursor, limit);
+  }
+
+  public verifyDelegation(request: VerifyArtifactsRequest): Promise<VerificationResponse> {
+    return this.request('POST', '/v1/verifications/delegation', request);
+  }
+
+  public verifyRequest(request: VerifyArtifactsRequest): Promise<VerificationResponse> {
+    return this.request('POST', '/v1/verifications/request', request);
+  }
+
+  public revoke(request: RevokeRequest, idempotencyKey?: string): Promise<RevocationResponse> {
+    const headers: Record<string, string> = {};
+    if (idempotencyKey !== undefined) headers['idempotency-key'] = idempotencyKey;
+    return this.request('POST', '/v1/revocations', request, headers);
+  }
+
+  public getRevocation(id: string): Promise<RevocationResponse> {
+    return this.request('GET', `/v1/revocations/${encodeURIComponent(id)}`);
+  }
+
+  public listEvents(cursor?: string, limit?: number): Promise<ListEventsResponse> {
+    return this.list('/v1/events', cursor, limit);
+  }
+
   public readTrustSnapshot(): Promise<TrustSnapshotResponse> {
     return this.request('GET', '/v1/trust-anchors');
   }
@@ -91,6 +137,13 @@ export class LocalApiClient {
     if (this.options.trustReloadToken !== undefined)
       headers['x-local-reload-token'] = this.options.trustReloadToken;
     return this.request('POST', '/v1/trust-snapshots:reload', undefined, headers);
+  }
+
+  private list<T>(path: string, cursor?: string, limit?: number): Promise<T> {
+    const parameters = new URLSearchParams();
+    if (cursor !== undefined) parameters.set('cursor', cursor);
+    if (limit !== undefined) parameters.set('limit', String(limit));
+    return this.request('GET', `${path}${parameters.size === 0 ? '' : `?${parameters}`}`);
   }
 
   private async request<T>(

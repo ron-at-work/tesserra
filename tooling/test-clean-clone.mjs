@@ -16,15 +16,17 @@ try {
   cpSync(root, clone, {
     recursive: true,
     filter(source) {
-      return !/(^|\/)(\.git|node_modules|dist|coverage|\.pnpm-store)(\/|$)/.test(source);
+      return !/(^|\/)(\.git|node_modules|dist|coverage|\.pnpm-store)(\/|$)|\.tsbuildinfo$/.test(
+        source
+      );
     }
   });
 
   run('node', ['tooling/verify-runtime.mjs']);
   run('corepack', ['pnpm', 'install', '--frozen-lockfile']);
   run('corepack', ['pnpm', 'lint']);
-  run('corepack', ['pnpm', 'typecheck']);
   run('corepack', ['pnpm', 'build']);
+  run('corepack', ['pnpm', 'typecheck']);
   run('corepack', ['pnpm', 'test']);
 } finally {
   rmSync(clone, { recursive: true, force: true });

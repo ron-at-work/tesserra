@@ -1,0 +1,65 @@
+name: Release artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-release:
+    name: Build and attest release assets
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable Corepack and install frozen workspace
+        run: |
+          corepack enable
+          node tooling/verify-runtime.mjs
+          pnpm install --frozen-lockfile
+      - name: Verify release candidate
+        run: |
+          pnpm lint
+          pnpm build
+          pnpm typecheck
+          pnpm test
+          pnpm test:clean-clone
+          pnpm benchmark
+      - name: Prepare checksums and supply-chain documents
+        run: |
+          rm -rf release
+          mkdir -p release
+          find packages apps -type d -name node_modules -prune -o -type f -path '*/dist/*' -print0 | sort -z | xargs -0 -r sha256sum > release/SHA256SUMS
+          node tooling/write-release-metadata.mjs release
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: |
+            release/
+            packages/*/dist/
+            apps/*/dist/
+          if-no-files-found: error
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release/**
+            packages/*/dist/**
+            apps/*/dist/**
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*
