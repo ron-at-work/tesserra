@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@agent-proof/api-contract": ["../api-contract/dist/src/index.d.ts"],
+      "@agent-proof/service": ["../service/dist/src/index.d.ts"],
+      "@agent-proof/protocol": ["../protocol/dist/src/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

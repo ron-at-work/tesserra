@@ -1,0 +1,39 @@
+{
+  "name": "agent-proof-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Proof reference implementation workspace.",
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "pnpm": ">=11.25.0 <12"
+  },
+  "scripts": {
+    "install": "node tooling/verify-runtime.mjs",
+    "build": "corepack pnpm -r --workspace-concurrency=1 run build",
+    "test": "corepack pnpm -r --workspace-concurrency=1 run test",
+    "typecheck": "corepack pnpm -r --workspace-concurrency=1 run typecheck",
+    "lint": "corepack pnpm run lint:format && corepack pnpm run lint:eslint && corepack pnpm run check:boundaries",
+    "lint:eslint": "eslint --max-warnings=0 eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts tooling packages",
+    "lint:format": "prettier --check .github config tooling packages CONTRIBUTING.md README.md SECURITY.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
+    "format": "prettier --write .github config tooling packages CONTRIBUTING.md README.md SECURITY.md package.json pnpm-workspace.yaml tsconfig.json tsconfig.build.json eslint.config.mjs prettier.config.mjs vitest.config.ts vitest.workspace.ts",
+    "check:boundaries": "node tooling/check-package-boundaries.mjs",
+    "test:clean-clone": "node tooling/test-clean-clone.mjs",
+    "benchmark": "node tooling/benchmark-placeholder.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/node": "24.10.1",
+    "@typescript-eslint/eslint-plugin": "8.46.4",
+    "@typescript-eslint/parser": "8.46.4",
+    "dependency-cruiser": "18.2.0",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.4",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - vorflux/attest-product
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Workspace quality
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Verify runtime and frozen install
+        run: |
+          node tooling/verify-runtime.mjs
+          pnpm install --frozen-lockfile
+      - name: Check formatting, lint, and package boundaries
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build
+      - name: Test
+        run: pnpm test
+      - name: Clean-clone workflow
+        run: pnpm test:clean-clone

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schemas/product.json",
+  "title": "Product presentation configuration",
+  "description": "Presentation-only product settings. This file must not define protocol, cryptographic, trust, or authorization semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["displayName", "tagline", "commandName", "links", "visualTokens"],
+  "properties": {
+    "displayName": { "type": "string", "minLength": 1 },
+    "tagline": { "type": "string", "minLength": 1 },
+    "commandName": { "const": "agentctl" },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "documentation", "security", "issues"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "documentation": { "type": "string", "format": "uri" },
+        "security": { "type": "string", "format": "uri" },
+        "issues": { "type": "string", "format": "uri" }
+      }
+    },
+    "visualTokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["color"],
+      "properties": {
+        "color": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accent", "background", "foreground"],
+          "properties": {
+            "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+            "background": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+            "foreground": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+          }
+        }
+      }
+    }
+  }
+}

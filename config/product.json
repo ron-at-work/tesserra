@@ -1,0 +1,19 @@
+{
+  "$schema": "./product.schema.json",
+  "displayName": "ATTEST",
+  "tagline": "Verifiable authority evidence for agent actions.",
+  "commandName": "agentctl",
+  "links": {
+    "repository": "https://github.com/ron-at-work/app",
+    "documentation": "https://github.com/ron-at-work/app/tree/main/docs",
+    "security": "https://github.com/ron-at-work/app/security/policy",
+    "issues": "https://github.com/ron-at-work/app/issues"
+  },
+  "visualTokens": {
+    "color": {
+      "accent": "#2563eb",
+      "background": "#ffffff",
+      "foreground": "#111827"
+    }
+  }
+}

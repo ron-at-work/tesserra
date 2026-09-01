@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Dependency-free mechanical guard for ATTEST Milestone 1 documentation work.
-# Usage: bash docs/review/run-milestone-1-review.sh [approved-base-ref]
+# Dependency-free integrity guard for the approved ATTEST Milestone 1 evidence.
+# Usage: bash docs/review/run-milestone-1-review.sh [milestone-commit-or-base-ref]
 set -euo pipefail
 
-readonly BASE_REF="${1:-}"
+readonly MILESTONE_REF="${1:-ae22dea}"
 readonly ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 
 if [[ -z "$ROOT" ]]; then
@@ -15,7 +15,6 @@ cd "$ROOT"
 failures=0
 warnings=0
 tmp_files="$(mktemp)"
-trap 'rm -f "$tmp_files"' EXIT
 
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -31,32 +30,27 @@ note() {
   printf 'OK: %s\n' "$*"
 }
 
-if [[ -n "$BASE_REF" ]]; then
-  if ! git rev-parse --verify --quiet "${BASE_REF}^{commit}" >/dev/null; then
-    printf 'ERROR: base ref %q does not resolve to a commit.\n' "$BASE_REF" >&2
-    exit 2
-  fi
-  git diff --name-only --diff-filter=ACMR "$BASE_REF"...HEAD >"$tmp_files"
-  git diff --name-only --diff-filter=ACMR "$BASE_REF" >>"$tmp_files"
-  git ls-files --others --exclude-standard >>"$tmp_files"
-  sort -u -o "$tmp_files" "$tmp_files"
-  note "auditing changes against ${BASE_REF} plus untracked files"
-else
-  {
-    git diff --name-only --diff-filter=ACMR
-    git diff --cached --name-only --diff-filter=ACMR
-    git ls-files --others --exclude-standard
-  } | sort -u >"$tmp_files"
-  note 'auditing staged, unstaged, and untracked working-tree files'
+if ! git rev-parse --verify --quiet "${MILESTONE_REF}^{commit}" > /dev/null; then
+  printf 'ERROR: milestone ref %q does not resolve to a commit.\n' "$MILESTONE_REF" >&2
+  exit 2
 fi
 
+readonly MILESTONE_COMMIT="$(git rev-parse "${MILESTONE_REF}^{commit}")"
+readonly EVIDENCE_ROOT="$(mktemp -d)"
+trap 'rm -f "$tmp_files"; rm -rf "$EVIDENCE_ROOT"' EXIT
+
+git archive "$MILESTONE_COMMIT" | tar -x -C "$EVIDENCE_ROOT"
+cd "$EVIDENCE_ROOT"
+note "verifying frozen Milestone 1 evidence at ${MILESTONE_COMMIT}"
+
+# U-12 records implementation approval. Verify the snapshot that approval
+# covered, rather than rejecting subsequent approved Phase 1 implementation
+# packages, dependencies, or tooling in the caller's working tree.
+git -C "$ROOT" diff-tree --root --no-commit-id --name-only -r "$MILESTONE_COMMIT" >"$tmp_files"
 if [[ ! -s "$tmp_files" ]]; then
-  warn 'no changed files found; required-artifact checks still apply'
+  fail "milestone commit has no recorded evidence files: ${MILESTONE_COMMIT}"
 else
   while IFS= read -r path; do
-    # Milestone 1 allows only reviewable documentation and conformance fixture
-    # formats. All files outside these paths, and unsupported extensions inside
-    # them, are prohibited until the checklist records implementation approval.
     case "$path" in
       docs/*.md|docs/**/*.md|docs/*.txt|docs/**/*.txt|docs/*.sh|docs/**/*.sh|docs/**/*.json|tests/conformance/*.md|tests/conformance/**/*.md|tests/conformance/*.txt|tests/conformance/**/*.txt|tests/conformance/*.sh|tests/conformance/**/*.sh|tests/conformance/*.json|tests/conformance/**/*.json|tests/conformance/self-check.py|tests/conformance/v1/self-check.py)
         ;;
@@ -217,4 +211,4 @@ if (( failures > 0 )); then
   printf 'Milestone 1 remains mechanically blocked. See docs/milestone-1-review-checklist.md.\n' >&2
   exit 1
 fi
-printf 'Mechanical audit passed. The gate remains pending the human and independent-review evidence plus explicit user approval recorded in docs/milestone-1-review-checklist.md.\n'
+printf 'Mechanical audit passed. Consult docs/milestone-1-review-checklist.md for the authoritative implementation-gate decision.\n'

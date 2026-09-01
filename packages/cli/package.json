@@ -1,0 +1,35 @@
+{
+  "name": "@agent-proof/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agentctl": "./dist/src/agentctl.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/agentctl.d.ts",
+      "default": "./dist/src/agentctl.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@agent-proof/protocol": "workspace:*",
+    "@agent-proof/sdk": "workspace:*",
+    "@agent-proof/api-contract": "workspace:*",
+    "@agent-proof/api-client": "workspace:*",
+    "@agent-proof/crypto-local": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

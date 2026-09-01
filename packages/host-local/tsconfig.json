@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@agent-proof/api-server": ["../api-server/dist/src/index.d.ts"],
+      "@agent-proof/service": ["../service/dist/src/index.d.ts"],
+      "@agent-proof/crypto-local": ["../crypto-local/dist/src/index.d.ts"],
+      "@agent-proof/storage-sqlite": ["../storage-sqlite/dist/index.d.ts"],
+      "@agent-proof/protocol": ["../protocol/dist/src/index.d.ts"],
+      "@agent-proof/core": ["../core/dist/src/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

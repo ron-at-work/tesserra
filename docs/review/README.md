@@ -1,46 +1,33 @@
-# Milestone 1 review guide
+# Milestone 1 evidence review guide
 
-This directory contains a no-dependency mechanical audit for the ATTEST documentation-only milestone. It allows only approved `.md`, `.json`, `.sh`, and `.txt` documentation artifacts under `docs/**` and versioned protocol conformance fixtures with those extensions under `tests/conformance/**`. The only Python exception is a dependency-light fixture verifier at exactly `tests/conformance/self-check.py` or `tests/conformance/v1/self-check.py`. It flags all changed files elsewhere and unsupported extensions inside those paths, including likely implementation, dependency, build, migration, generated-SDK, and application-scaffold artifacts. The script does not alter the repository.
+This directory contains a dependency-free integrity guard for the approved ATTEST Milestone 1 documentation and conformance evidence. U-12 is complete and Phase 1 implementation is authorized. The guard therefore validates the immutable evidence snapshot that approval covered; it does **not** inspect later Phase 1 source, package, dependency, tooling, or application changes as if they were Milestone 1 violations.
 
 ## Run
 
 From the repository root:
 
 ```sh
-bash docs/review/run-milestone-1-review.sh <approved-base-ref>
+bash docs/review/run-milestone-1-review.sh ae22dea
 ```
 
-Use the commit immediately preceding Milestone 1 work as `<approved-base-ref>`. If there is no commit yet, omit the argument to audit untracked and working-tree files:
+`ae22dea` is the recorded Milestone 1 evidence commit. It may be replaced only with an immutable review revision that has completed the required traceability, security, independent-reproduction, and approval process. The script archives that exact commit to a temporary directory, so uncommitted changes and later Phase 1 packages cannot alter its result.
 
-```sh
-bash docs/review/run-milestone-1-review.sh
-```
-
-The script needs Bash 4+, Git, `sort`, and `mktemp`, which are standard development-environment tools. It adds no package or runtime dependency.
+The script needs Bash 4+, Git, `tar`, `sort`, `mktemp`, and `python3`; it adds no package or runtime dependency.
 
 ## What it checks
 
-1. Milestone changes are limited to approved `.md`, `.json`, `.sh`, and `.txt` files under `docs/**` and `tests/conformance/**`.
-2. The actual RFC, threat model, five architecture documents, standards index/research/source/boundary/scenario/change-watch/matrix evidence, six ADRs and index, protocol schemas, and conformance fixture locations are present.
-3. The [traceability ledger](../requirements-traceability.md) and authoritative [implementation-unlock checklist](../milestone-1-review-checklist.md) are present.
+1. The recorded milestone commit contains only approved `.md`, `.json`, `.sh`, and `.txt` files under `docs/**` and `tests/conformance/**`, plus the exact approved Python self-check locations.
+2. The required RFC, threat model, architecture records, standards evidence, ADRs, schemas, and conformance locations are present in that frozen snapshot.
+3. The supplied dependency-light fixture self-check passes, including the credential-purpose, manifest, derivation-coverage, and cryptographic-integrity checks.
 
-A successful run means the mechanical layout, change-scope, and supplied fixture self-check passed. The enhanced `v1/self-check.py` and guard must reject legacy `credential_purpose: "agent-signing"` values and any purpose outside `agent-root-authority` or `agent-key-binding`, plus schema-subset, manifest, derivation-coverage, and cryptographic-integrity defects. It intentionally does **not** decide implementation readiness, and it does not fail merely because human-review records remain open. The milestone remains blocked until the checklist's independent review and explicit approval checks are completed.
+The guard preserves evidence integrity; it does not replace the independent review record or decide any future implementation gate. [`../milestone-1-review-checklist.md`](../milestone-1-review-checklist.md) remains the authoritative approval record.
 
 ## Fixture self-check discovery
 
-When a dependency-light self-check is supplied at `tests/conformance/self-check.sh`, `tests/conformance/v1/self-check.sh`, `tests/conformance/self-check.py`, or `tests/conformance/v1/self-check.py`, the guard runs it before reporting success. Bash checks run with Bash; the two exact Python paths run with `python3`. The supplied verifier must validate fixtures only, require no added dependency, and exit nonzero on legacy `credential_purpose: "agent-signing"` values, any other disallowed credential-purpose value, schema-subset, manifest, derivation-coverage, or cryptographic-integrity defects. The guard separately checks JSON fixture instances and schema property enums, allowing only `agent-root-authority` and `agent-key-binding`. Python remains forbidden everywhere else.
+When supplied at `tests/conformance/self-check.sh`, `tests/conformance/v1/self-check.sh`, `tests/conformance/self-check.py`, or `tests/conformance/v1/self-check.py`, the guard runs the snapshot's self-check. Bash checks run with Bash; the two exact Python paths run with `python3`. The verifier validates fixtures only and must reject legacy `credential_purpose: "agent-signing"`, values outside `agent-root-authority` and `agent-key-binding`, and manifest/schema/derivation-coverage or cryptographic-integrity defects.
 
-The dependency-light self-check cannot replace full JSON Schema Draft 2020-12 evaluation. The independent-review record must capture a real Draft 2020-12 validator's name/version, command, schema roots, fixture inputs, exit status, and retained output. Record separately the manifest inputs deliberately expected to be schema-invalid: `cases/trust-snapshot-invalid.json`, `cases/unsupported-algorithm.json`, `cases/unsupported-critical.json`, `cases/unsupported-kind.json`, `cases/unsupported-resource-type.json`, `cases/unsupported-version.json`, `cases/untrusted-issuer.json`, and all five `malformed/` inputs. All other manifest inputs must validate against `case-envelope.schema.json`; see U-10 in the [implementation-unlock checklist](../milestone-1-review-checklist.md) for the exact expected invalid condition per file. Independent reproduction remains a separate human review requirement.
+The dependency-light self-check does not replace a full JSON Schema Draft 2020-12 evaluation. The independent review record captures the validator/version, command, schema roots, input set, exit status, and retained output. It distinguishes deliberately schema-invalid cases from schema-valid cases; see U-10 in the [implementation-unlock checklist](../milestone-1-review-checklist.md).
 
-## Human checklist
+## Human review record
 
-[`../milestone-1-review-checklist.md`](../milestone-1-review-checklist.md) is the authoritative review and approval record. Reviewers must manually verify:
-
-- citation freshness, source maturity labels, and immutable links;
-- RFC/ADR normative completeness and exact requirement mapping;
-- independent canonicalization/key-ID/signing/signature reproduction from [`../../tests/conformance/v1/`](../../tests/conformance/v1/);
-- conformance coverage and expected ordered outcomes;
-- threats, untestable assumptions, unresolved decisions, and residual risks;
-- explicit user approval after all other checks pass.
-
-A clean script run is supporting evidence only. It cannot substitute for any of these judgments.
+Reviewers used the checklist to verify citation freshness, normative completeness, independent canonicalization/key-ID/signature reproduction, conformance coverage, threats, unresolved decisions, residual risks, and explicit user approval. The U-12 wording is accepted and remains complete. Future changes to frozen wire bytes, trust semantics, decision precedence, or declared adapter status require the RFC amendment and renewed review process stated in the checklist.

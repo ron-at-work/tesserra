@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@agent-proof/protocol": ["../protocol/dist/src/index.d.ts"],
+      "@agent-proof/sdk": ["../sdk/dist/src/index.d.ts"],
+      "@agent-proof/api-contract": ["../api-contract/dist/index.d.ts"],
+      "@agent-proof/api-client": ["../api-client/dist/index.d.ts"],
+      "@agent-proof/crypto-local": ["../crypto-local/dist/src/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["test"]
+}
