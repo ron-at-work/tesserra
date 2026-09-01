@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schema/v1/trust-snapshot.schema.json",
+  "title": "Agent Proof v1 authenticated local trust policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "sequence",
+    "issued_at",
+    "expires_at",
+    "policy_hash",
+    "max_clock_skew_seconds",
+    "max_lifetime_seconds",
+    "max_chain_depth",
+    "replay_policy",
+    "issuer_authorities",
+    "status_publishers",
+    "roots",
+    "status_high_water",
+    "archival_policy"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "issued_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "expires_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "policy_hash": {
+      "$ref": "common.schema.json#/$defs/policy_hash"
+    },
+    "max_clock_skew_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 300
+    },
+    "max_lifetime_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_chain_depth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8
+    },
+    "replay_policy": {
+      "enum": [
+        "online-required",
+        "offline-inspection-only"
+      ]
+    },
+    "issuer_authorities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "principal",
+          "key_id",
+          "public_jwk"
+        ],
+        "properties": {
+          "principal": {
+            "$ref": "common.schema.json#/$defs/principal"
+          },
+          "key_id": {
+            "$ref": "common.schema.json#/$defs/key_id"
+          },
+          "public_jwk": {
+            "$ref": "common.schema.json#/$defs/jwk"
+          }
+        }
+      }
+    },
+    "status_publishers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "principal",
+          "key_id",
+          "public_jwk"
+        ],
+        "properties": {
+          "principal": {
+            "$ref": "common.schema.json#/$defs/principal"
+          },
+          "key_id": {
+            "$ref": "common.schema.json#/$defs/key_id"
+          },
+          "public_jwk": {
+            "$ref": "common.schema.json#/$defs/jwk"
+          }
+        }
+      }
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "issuer",
+          "root_subject",
+          "credential_purpose"
+        ],
+        "properties": {
+          "issuer": {
+            "$ref": "common.schema.json#/$defs/principal"
+          },
+          "root_subject": {
+            "$ref": "common.schema.json#/$defs/principal"
+          },
+          "credential_purpose": {
+            "const": "agent-root-authority"
+          }
+        }
+      }
+    },
+    "status_high_water": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "publisher",
+          "target_key_id",
+          "sequence",
+          "semantic_digest"
+        ],
+        "properties": {
+          "publisher": {
+            "$ref": "common.schema.json#/$defs/principal"
+          },
+          "target_key_id": {
+            "$ref": "common.schema.json#/$defs/key_id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "semantic_digest": {
+            "$ref": "common.schema.json#/$defs/digest"
+          }
+        }
+      }
+    },
+    "archival_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "historical_verification",
+        "minimum_retention_seconds"
+      ],
+      "properties": {
+        "historical_verification": {
+          "const": "explicit-snapshot-only"
+        },
+        "minimum_retention_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

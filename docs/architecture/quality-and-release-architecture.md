@@ -1,0 +1,41 @@
+# Quality, conformance, benchmark, and release architecture
+
+**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+
+## Quality layers
+
+| Layer | Required evidence |
+| --- | --- |
+| Protocol conformance | RFC 0001 §7 defines fixture conformance and limitations; the versioned manifest is the authoritative current inventory. Fixtures cover the RFC §2 outer parsing/identity rules; §3 authority/constraints; §4 trust/status/rotation/provenance; §5 binding/replay; and §6 ordered decisions. They include canonical intermediates, signing inputs, signatures, IDs, expected ordered primary/secondary codes, and pinned snapshot assumptions. RFC 0001 §6 fixes the stage sequence: PARSE → VERSION → CRYPTO → TIME → TRUST → CHAIN → STATUS → BINDING → REPLAY. |
+| Independent reproduction | A tool independent of the reference package reproduces canonical bytes, key IDs, signatures, content IDs, and decisions before wire semantics freeze. |
+| Unit/integration | Pure core unit tests; provider/storage/service/API integration tests; transactional fault injection; clean-clone execution. |
+| Property/security | Generator-based attenuation subset properties, parser/canonicalization differentials, algorithm/key confusion, cycle/splicing, replay race, status rollback, and redaction tests. |
+| Package/contract | Strict typecheck, exports and boundary checks, OpenAPI/CLI/SDK parity, schema validation, clean external-consumer tests, and proof that `api-client`/dashboard/SDK dependency closure excludes service, storage, local crypto, server, host, and adapters. |
+| Operations | SQLite migration/upgrade/backup/restore tests, lock/contention behavior, key/provider lifecycle tests, trust snapshot sequence/policy-hash checks, status publisher high-water/previous-digest checks, secret/license/dependency scanning, docs links, and executable examples. |
+| UI | Separate dashboard and landing route/state tests, accessibility, keyboard/focus, responsive, touch, reduced-motion, and API-contract drift tests. |
+
+A failed cumulative gate blocks the next phase. Adapter work also requires refreshed official standards pins, compatibility documentation, and adapter-specific downgrade/stripping tests.
+
+## Benchmark policy
+
+Benchmark only after a capability exists. Track credential/signature/chain/request verification, rotation, trust/revocation lookup, provenance reconstruction, and adapter overhead as applicable. A published number MUST include version/commit, exact runtime/toolchain, OS/CPU, fixture shape/count, methodology, warm-up/sample policy, statistical summary, configuration, and raw/derived result artifact. Do not publish estimates, marketing comparisons, or unmeasured capacity/security claims.
+
+Benchmarks must not include secret material in fixtures or logs. Regression thresholds, if added, are repository policy rather than protocol semantics.
+
+## Versions and compatibility
+
+Protocol version and package version are independent:
+
+- **Protocol version** identifies canonical wire semantics, required/critical fields, signing preimages, code precedence, and conformance vectors. Unknown critical semantics/version fail closed.
+- **Package version** follows the chosen package-release policy for APIs, tooling, and implementation fixes. A package release may support a declared set of protocol versions.
+- **Database schema/migration version** is separate and must not imply protocol compatibility.
+
+Before publishing, releases require frozen install, clean-room build/test against a fresh clone and independent consumer, generated artifact verification, changelog/compatibility notes, dependency/license/secret checks, SBOM, provenance, checksums, and signatures. A verifier release cannot silently change acceptance, canonical bytes, error precedence, or trust semantics for a frozen protocol version. Such a change requires an RFC amendment/new protocol version and compatibility fixtures.
+
+## Separate web surfaces
+
+`apps/dashboard` is a locally operated `api-client` user for verified operational state; it must provide truthful loading, empty, error, offline, stale, and invalid-evidence states and no marketing substitution. It has no direct or transitive server, service, storage, local-key, host, or adapter import. `apps/landing` is an independently built/deployed static public site. It sources approved names/links/tokens and tested snippets but must not claim unsupported security properties, use fake metrics/testimonials/logos/endorsements, or import local operations internals.
+
+## Implementation technology decisions
+
+Use the [canonical implementation technology-decision register](repository-architecture.md#canonical-implementation-technology-decision-register). It governs the quality/benchmark stack, dashboard and landing technology choices, release tooling, signing identity, SBOM/provenance format, artifact registry, and protocol support window. These requirements remain mandatory: no exception permits dashboard backend imports or merges the web surfaces; an exception may allow an internal unsigned build only and never a public release.

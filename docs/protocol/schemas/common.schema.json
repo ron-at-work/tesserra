@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schema/v1/common.schema.json",
+  "title": "Agent Proof v1 common definitions",
+  "$defs": {
+    "protocol_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "version": {
+      "const": "agent-proof/v1"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "uuidv7": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "b64u32": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "b64u64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^urn:agent-proof:v1:sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "policy_hash": {
+      "type": "string",
+      "pattern": "^urn:agent-proof:policy:v1:sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "status_hash": {
+      "type": "string",
+      "pattern": "^urn:agent-proof:status:v1:sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "key_id": {
+      "type": "string",
+      "pattern": "^urn:agent-proof:kid:v1:sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "agent_id": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "version",
+        "authority",
+        "path"
+      ],
+      "properties": {
+        "scheme": {
+          "const": "agid"
+        },
+        "version": {
+          "const": 1
+        },
+        "authority": {
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9._-]{0,62})$"
+          }
+        }
+      }
+    },
+    "principal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "human",
+            "service",
+            "agent",
+            "workload",
+            "oauth_client",
+            "model"
+          ]
+        },
+        "id": {}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "agent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/agent_id"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]{2,254}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "jwk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kty",
+        "crv",
+        "x"
+      ],
+      "properties": {
+        "kty": {
+          "const": "OKP"
+        },
+        "crv": {
+          "const": "Ed25519"
+        },
+        "x": {
+          "$ref": "#/$defs/b64u32"
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alg",
+        "kid",
+        "sig"
+      ],
+      "properties": {
+        "alg": {
+          "type": "string"
+        },
+        "kid": {
+          "$ref": "#/$defs/key_id"
+        },
+        "sig": {
+          "type": "string"
+        }
+      }
+    },
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/artifact_id"
+        },
+        "kind": {
+          "enum": [
+            "credential",
+            "delegation",
+            "request",
+            "provenance",
+            "key_status",
+            "revocation",
+            "key_rotation"
+          ]
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capabilities",
+        "resources",
+        "tasks",
+        "audiences",
+        "not_before",
+        "expires_at",
+        "remaining_depth"
+      ],
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/resource"
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/uuidv7"
+          }
+        },
+        "audiences": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9.-]{0,252}$"
+          }
+        },
+        "not_before": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "remaining_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        }
+      }
+    }
+  }
+}

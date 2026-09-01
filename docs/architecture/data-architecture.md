@@ -1,0 +1,48 @@
+# Local data architecture
+
+**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+
+SQLite is the default local persistence implementation. It is a storage adapter behind ports, not a source of trust semantics. Foreign keys are enabled; writes that affect authority, status, or replay occur in transactions. Application-layer authorization is still required: filesystem access to a local database is not authorization.
+
+## Data classification, retention, and access
+
+| Table | Content and sensitivity | Retention / deletion | Security controls |
+| --- | --- | --- | --- |
+| `agents` | Public agent identifiers and non-secret metadata; linkable identity data | Until explicit removal or configured lifecycle expiry; retain tombstone/minimal audit reference only where policy requires | Validate identifiers; minimize display metadata; encrypted filesystem/backups. |
+| `keys` | Public JWK/reference, key status/windows, opaque provider reference, credential linkage; **no private key bytes** | Keep complete status/rotation history through configured historical-verification window; then archive/delete under policy | Store immutable state transitions (`active`, `retired`, `compromised`, `revoked`), signing/verification windows, replacement key, rotation record, and history sequence; provider reference is opaque. |
+| `delegations` | Signed canonical delegation artifacts; authority/task/resource metadata; sensitive linkability | Retain through validity plus configured audit/appeal window; archive or purge only under policy | Store canonical bytes and digest; access-controlled exports; redact UI/API fields as policy requires. |
+| `trust_snapshots` | Authenticated local trust snapshot identity, canonical policy hash, monotonic sequence, issue/expiry, source/provenance, selected roots/publishers; integrity-critical policy | Retain each accepted/historical snapshot through the longest configured historical-verification window | Unique `snapshot_id`; policy hash computed over RFC-defined content; reject sequence rollback; bind each decision to snapshot identity, hash, and sequence. |
+| `trust_anchors` | Public issuer authority material and metadata belonging to a `trust_snapshot`; low secrecy, high integrity | Retain with its parent snapshot | Immutable snapshot membership; no ambient/discovered anchors. |
+| `status_publishers` | Configured publisher keys and accepted per-publisher high-water sequence/semantic digest for a snapshot; integrity-critical | Retain with its parent snapshot and required historical status evidence | Enforce one publisher stream; persist high-water `(sequence, digest)` atomically with accepted records; reject gaps, rollback, forks, and unpinned publishers. |
+| `key_status_records` | Canonical signed key-status artifacts, issuer/publisher, state/effective/as-of/valid-until, sequence, previous digest; sensitive operational history | Retain through maximum historical-verification and legal/security policy window | Append-only `(publisher, sequence)` stream; previous digest and high-water validation; preserve canonical artifact and digest. |
+| `revocations` | Canonical signed revocation artifacts, target, reason, timing, sequence, previous digest; potentially sensitive operational history | Retain through maximum historical-verification and legal/security policy window | Append-only publisher stream; preserve canonical artifact, predecessor linkage, and selected snapshot identity. |
+| `key_rotations` | Canonical signed old/new key linkage, activation/retirement, recovery authority, sequence, previous digest; sensitive lifecycle history | Retain with key history and historical-verification window | Prevent ambiguous active signer selection; preserve predecessor/high-water linkage and replacement provenance. |
+| `requests` | Request/replay key, nonce digest, timing/context digests; highly sensitive correlation metadata | Minimum interval necessary for replay window plus bounded forensic retention | Unique replay key; hash/redact payload values; atomic consume; never log secrets. |
+| `verification_events` | Redacted decision evidence, codes, artifact digests, trust snapshot identity/hash/sequence, status high-water references; sensitive provenance/linkability | Configurable bounded audit retention; immutable/redacted export form | No private keys, raw tokens, nonce values, or unnecessary payloads; pagination/filter authorization. |
+| `migrations` | Migration identity/checksum/application time; low sensitivity, integrity critical | Indefinite for database lifetime | Append-only record, checksums, transactional application, backup verification. |
+
+Retention periods are policy configuration unresolved in Milestone 1; a deployment MUST document them before storing operational data. Deletion must not silently invalidate claims of historical verification: the service records whether the referenced trust snapshot and status high-water were available at evaluation time. Backups inherit the same classification and must be encrypted and access controlled.
+
+## Trust, status, and key lifecycle integrity
+
+Per RFC 0001 §4, a `TrustSnapshot` is selected by immutable `snapshot_id`, canonical `policy_hash`, and monotonically increasing `sequence`. `policy_hash` is derived over the RFC-defined policy content, not a mutable display or storage projection. The selected triple is stored with every verification event and any historical-verification result. A lower snapshot sequence is rejected; a snapshot with the same identity but different policy hash is an integrity failure.
+
+Per RFC 0001 §4, for each configured status publisher and selected trust snapshot, `status_publishers` holds the accepted high-water sequence and the predecessor/record semantic digest needed to continue the status chain. Accept a status, revocation, or rotation record only in the same transaction that verifies its configured publisher, expected next sequence, `previous_digest`, freshness, and parent snapshot. A missing predecessor, gap, fork, stale status, rollback, or publisher mismatch is fail-closed; storage cannot “repair” it by choosing a later record.
+
+Per RFC 0001 §4, keys maintain both the current derived view and immutable canonical history. A status transition or rotation records the source artifact, effective interval, publishing/recovery authority, prior/current key IDs, and status-stream sequence. At any evaluation instant, policy must select exactly one active signing key; retired keys are historical-verification-only when policy permits, while compromised/revoked/unknown keys are unusable.
+
+## Migration and integrity policy
+
+Future migrations are ordered, immutable, checksummed files owned exclusively by `storage-sqlite`. They run in one transaction when SQLite permits; a migration is recorded only after success. The service blocks startup on an unknown, missing, reordered, or checksum-mismatched migration. Upgrade, downgrade/restore, backup, locking, and injected-failure behavior are release-gate tests. Schema changes use forward migrations; destructive changes require a documented export/retention plan.
+
+The replay uniqueness constraint covers the protocol-defined replay key (including the applicable authority/context scope) and is consumed with `INSERT ... ON CONFLICT` or equivalent in the same transaction as the accepted online request. Exactly one concurrent contender may receive success.
+
+## Local key provider
+
+`crypto-local` provides encrypted-at-rest local keys through an opaque `KeyProvider` reference. The database stores that reference, public material, ID, algorithm, state, and validity windows—never raw private keys, seed phrases, passphrases, or decrypted key bytes. Encryption key derivation, OS keystore integration, passphrase lifecycle, lock/unlock UX, memory-zeroization limits in managed runtimes, and recovery/backup procedures require security RFC review before implementation.
+
+Logs, errors, API responses, CLI output, events, SQL traces, telemetry, crash reports, and backups MUST NOT disclose private keys, plaintext unlock material, or raw secret-bearing request artifacts.
+
+## Implementation technology decisions
+
+Use the [canonical implementation technology-decision register](repository-architecture.md#canonical-implementation-technology-decision-register). It governs the SQLite driver/migration framework, retention and backup controls, key-encryption/KDF and keystore design, recovery UX, and archival format. These requirements remain mandatory: no exception permits plaintext private-key storage, and any archival exception may disable historical-verification claims only; it may not silently downgrade them.

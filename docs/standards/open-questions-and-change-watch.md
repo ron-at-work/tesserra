@@ -1,0 +1,45 @@
+# Open questions and change watch
+
+**Status review date:** 2026-09-01 UTC. This is a watch list, not a commitment to implement any item. A changed source requires a source-register refresh and an RFC/decision review before an adapter is built.
+
+## Decisions frozen by RFC 0001 (not open questions)
+
+The following questions were resolved in the Milestone 1 wire RFC and are removed from the open-decision list. Any change requires an RFC amendment, schema/vector update, independent reproduction, and renewed approval—not a future adapter choice.
+
+| Former question | Frozen decision | Boundary retained |
+| --- | --- | --- |
+| Logical-agent identifier / namespace | Neutral project-defined wire namespaces: `agent-proof/v1` for artifacts, `urn:agent-proof:*` for artifacts and keys, and `https://agent-proof.invalid/*` for schemas/predicates. `agid:v1` is only the structured logical-agent ID scheme. The working display name is never a wire or internal namespace. | No DID method, SPIFFE ID, OAuth client ID, A2A Agent Card, or model label is substituted for `agent_id`. |
+| Canonical envelope and signature profile | Strict UTF-8 I-JSON acceptance; duplicate-member rejection; RFC 8785 JCS; domain-separated project signing/hash inputs; literal `Ed25519`; public OKP JWK shape. | This is a project-defined envelope, not JWS, DSSE, an OAuth token, or a new external standard. RFC 8032/8037 supply primitive/JWK context [CRYPTO-11–CRYPTO-12]. |
+| Credential constraints and attenuation | Root ceilings and every delegation constrain exact principal/action/resource/task/audience/validity/depth dimensions. Children only narrow; omissions grant nothing. The verifier enforces finite chain/artifact/canonical-byte bounds. | Core does not issue OAuth grants or become a general policy engine; source credentials retain their own lifecycle. |
+| Trust/status/freshness | Verification uses an explicitly selected, locally configured, content-addressed trust/policy/status snapshot; production defaults to no TOFU and fails closed for unknown/stale policy-defined status. | SPIFFE/OAuth/DID/VC/SCITT discovery or status endpoints do not become automatic ATTEST trust roots. |
+| Request/task binding | Requests bind a JCS-canonical semantic request/task context using a domain-separated digest; external transport task/message IDs are annotations unless bound to the exact content. | A2A/MCP IDs, URLs, display strings, or OAuth scope alone are not sufficient task authorization evidence. |
+| Provenance representation | The RFC defines a project-specific provenance artifact/predicate with in-toto-like statement/subject separation and explicit authority/task/runtime/action/digest fields. | PROV/in-toto/DSSE/SLSA inform mapping/export only; signed provenance never confers authorization. |
+
+## Remaining open questions
+
+| ID | Question | Why it remains open | Current constrained direction |
+| --- | --- | --- | --- |
+| Q-01 | Which explicit, versioned MCP and A2A extension carrier can safely carry a completed proof? | Carrier placement, negotiation, intermediary behavior, and compatibility belong to the later adapter phases and the protocol projects can change. | Do not invent a carrier in core. Pin the then-current MCP/A2A release, negotiate capability, bind exact request/task digest, and make missing/stripped proof explicit. |
+| Q-02 | Which deployment profiles need online status and which can accept bounded offline freshness? | The RFC defines snapshot/expiry mechanics but a deployment's availability/privacy/freshness trade-off is local policy. | Require an explicit snapshot and local freshness ceiling; document residual stale-status behavior. No global-instant-revocation claim. |
+| Q-03 | Which provenance exports, if any, need in-toto/DSSE or SCITT interoperability? | The project predicate is frozen, but export targets introduce external profile, operator, privacy, and trust choices. | Keep export optional and separately profiled. Do not use registration or an export signature as authorization. |
+| Q-04 | What independent evidence can substantiate model/provider/runtime assertions for a particular deployment? | The RFC intentionally treats these as provenance metadata, and available attestations vary by environment. | Never authorize based on a model label. Record collection method and verify any optional runtime-evidence through its native system. |
+
+## Source change triggers
+
+| Watch item | Current pin/status | Trigger | Required response |
+| --- | --- | --- | --- |
+| MCP authorization/core | `2026-07-28` project release [M-01–M-02] | Any MCP release, authorization section revision, new extension mechanism, or changed transport/security requirement | Re-pin release/schema; rerun authorization/resource/PKCE/issuer/audience analysis; update MCP adapter boundary and vectors. |
+| SPIFFE standards / SPIRE | SPIFFE commit `dc4e9d9…6060`; latest SPIRE release at review `v1.15.3` (2026-08-21), later review snapshot `9f75abe…e1ae` (2026-08-29) [S-01–S-06] | SPIFFE spec change, Workload API/federation change, or selected SPIRE release | Revalidate SVID/bundle/audience/runtime mapping; select and test one exact SPIRE release rather than treating the repository snapshot as a release. |
+| A2A | `v1.0.1` schema/spec [A-01–A-02] | Any A2A release/schema change or new signed-card/security/extension rules | Re-pin `a2a.proto`; re-evaluate Agent Card and task-binding assumptions; test unknown/stripped extensions. |
+| OAuth/OIDC and crypto/serialization stable specs | RFCs/BCP in [O-01–O-15] and CRYPTO-01–CRYPTO-15 | New RFC that updates/obsoletes cited OAuth/OIDC security, sender-constraint, token-exchange, metadata, or JWT profile material | Update citations and integration profile; preserve source-owned semantics. |
+| OAuth 2.1 | `draft-ietf-oauth-v2-1-15`, Internet-Draft expiring 2026-09-03 [D-01] | New revision, expiration/replacement, WG adoption change, RFC publication | Reclassify accurately. Do not cite as a standard until published as an RFC; assess MCP's actual normative references. |
+| WIMSE WG / cross-organization / AI-agent drafts | W-01 through W-05 are WG Internet-Drafts; W-06 and W-07 are individual drafts (W-07 reaches its stated expiry date on this review date); D-02 through D-05 are individual agent-delegation drafts (D-04 expired) | New revision, WG adoption or publication, expiration, replacement, or RFC publication | Reclassify each by actual stream/status; review only for convergence/compatibility. No automatic adoption; a protocol change needs its own decision. |
+| Agent Identity Protocol | D-06 active individual Internet-Draft with no RFC stream/state; G-08 project proposal | New revision, WG adoption, stream assignment, RFC publication, or a compatible first-party versioned spec | Reclassify by actual Datatracker state before comparison; preserve non-equivalence rules. |
+| AGNTCY identity | latest release at review `v0.0.23` (2026-01-29); reviewed later repository snapshot `452077…28f2` (2026-02-24); site retrieved 2026-09-01 [G-01–G-02] | Stable/spec release, VC/DID profile change, schema/API change | Refresh exact schema/credential semantics and decide whether a voluntary adapter is warranted; do not conflate release, snapshot, and site revision. |
+| 1Password local delegated architecture | first-party draft, last-modified 2026-08-07 [G-05] | Revision/publication status change, `sub`/`act` mapping change, local attestation changes | Reassess as a local deployment profile only; do not generalize it as a standard. |
+| Entra Agent ID/OBO | product documentation [G-06–G-07] | Product flow/claim/consent documentation changes | Revalidate the product adapter mapping; never treat Microsoft product behavior as portable OAuth semantics. |
+| PROV / in-toto / DSSE / SLSA / SCITT | in-toto latest release `v1.2.0` (2026-03-18), later snapshot `2dcd05…45be` (2026-08-24); SLSA v1.2 source pinned to `ae7fc7…8e3b` (2026-04-14); RFC 9943 published June 2026 [P-01–P-06] | New versions, DSSE signing changes, selected export profile, SCITT protocol maturity changes | Pin the exact export construction, update provenance examples, and independently reproduce signature/canonicalization bytes. Do not equate a documentation site with its repository snapshot. |
+
+## Final implementation gate reminder
+
+Before any implementation or adapter phase, conduct the refresh procedure in [Research method](research-method.md): review every active draft's exact state, replace mutable links with releases/commits, confirm every claimed external behavior with the pinned primary text, and amend the protocol/decision record for any material delta. No draft, product document, or project specification becomes a standard merely because it is implemented or cited here.

@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schema/v1/case-envelope.schema.json",
+  "title": "Agent Proof v1 conformance case envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trust_snapshot",
+    "artifacts",
+    "verification_context",
+    "verifier_now",
+    "replay_mode",
+    "expected_result"
+  ],
+  "properties": {
+    "trust_snapshot": {
+      "$ref": "trust-snapshot.schema.json"
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "artifacts.schema.json"
+      }
+    },
+    "verification_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audience",
+        "action",
+        "resource",
+        "task",
+        "expected_signer",
+        "expected_payload_digest",
+        "expected_task_context_digest",
+        "replay_required"
+      ],
+      "properties": {
+        "audience": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/resource"
+        },
+        "task": {
+          "$ref": "common.schema.json#/$defs/uuidv7"
+        },
+        "expected_signer": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "expected_payload_digest": {
+          "$ref": "common.schema.json#/$defs/digest"
+        },
+        "expected_task_context_digest": {
+          "$ref": "common.schema.json#/$defs/digest"
+        },
+        "replay_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "verifier_now": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "replay_mode": {
+      "enum": [
+        "online",
+        "offline"
+      ]
+    },
+    "replay_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consumed_request_ids",
+        "consumed_nonces",
+        "retention_until"
+      ],
+      "properties": {
+        "consumed_request_ids": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "consumed_nonces": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "retention_until": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        }
+      }
+    },
+    "expected_result": {
+      "$ref": "verification.schema.json"
+    },
+    "archived_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "sequence",
+        "issued_at",
+        "expires_at",
+        "policy_hash",
+        "status_snapshot_hash",
+        "verification_mode",
+        "policy_content",
+        "status_members"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "policy_hash": {
+          "$ref": "common.schema.json#/$defs/policy_hash"
+        },
+        "status_snapshot_hash": {
+          "$ref": "common.schema.json#/$defs/status_hash"
+        },
+        "verification_mode": {
+          "const": "historical"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "policy_content": {
+          "type": "object"
+        },
+        "status_members": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

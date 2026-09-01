@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schema/v1/verification.schema.json",
+  "title": "Agent Proof v1 verification context/result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "decision_version",
+    "evidence_ids",
+    "policy_hash",
+    "status_snapshot_hash",
+    "replay_checked",
+    "secondary_codes",
+    "status_fresh",
+    "valid",
+    "verifier_now",
+    "warnings"
+  ],
+  "properties": {
+    "code": {
+      "enum": [
+        "VALID",
+        "MALFORMED_UTF8",
+        "MALFORMED_JSON",
+        "DUPLICATE_MEMBER",
+        "SCHEMA_INVALID",
+        "NON_CANONICAL",
+        "ID_MISMATCH",
+        "KEY_ID_MISMATCH",
+        "UNSUPPORTED_VERSION",
+        "UNSUPPORTED_KIND",
+        "UNSUPPORTED_ALGORITHM",
+        "UNSUPPORTED_CRITICAL_SEMANTICS",
+        "UNSUPPORTED_RESOURCE_TYPE",
+        "MISSING_REFERENCE",
+        "INVALID_SIGNATURE",
+        "INVALID_DIGEST_LINKAGE",
+        "NOT_YET_VALID",
+        "EXPIRED",
+        "INVALID_TIME_INTERVAL",
+        "TRUST_SNAPSHOT_INVALID",
+        "UNTRUSTED_ISSUER",
+        "UNTRUSTED_KEY",
+        "MIXED_TRUST_ROOT",
+        "KEY_NOT_USABLE",
+        "CHAIN_PARENT_MISSING",
+        "CHAIN_PARENT_AMBIGUOUS",
+        "CHAIN_BOUNDS_EXCEEDED",
+        "ATTENUATION_VIOLATION",
+        "STATUS_UNAVAILABLE",
+        "STATUS_STALE",
+        "STATUS_ROLLBACK",
+        "REVOKED",
+        "SIGNER_MISMATCH",
+        "AUDIENCE_MISMATCH",
+        "ACTION_NOT_ALLOWED",
+        "RESOURCE_NOT_ALLOWED",
+        "TASK_NOT_ALLOWED",
+        "REPLAY_DETECTED",
+        "OFFLINE_REPLAY_UNAVAILABLE"
+      ]
+    },
+    "decision_version": {
+      "const": "agent-proof/v1"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/artifact_id"
+      }
+    },
+    "policy_hash": {
+      "$ref": "common.schema.json#/$defs/policy_hash"
+    },
+    "status_snapshot_hash": {
+      "$ref": "common.schema.json#/$defs/status_hash"
+    },
+    "replay_checked": {
+      "type": "boolean"
+    },
+    "secondary_codes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "MALFORMED_UTF8",
+          "MALFORMED_JSON",
+          "DUPLICATE_MEMBER",
+          "SCHEMA_INVALID",
+          "NON_CANONICAL",
+          "ID_MISMATCH",
+          "KEY_ID_MISMATCH",
+          "UNSUPPORTED_VERSION",
+          "UNSUPPORTED_KIND",
+          "UNSUPPORTED_ALGORITHM",
+          "UNSUPPORTED_CRITICAL_SEMANTICS",
+          "UNSUPPORTED_RESOURCE_TYPE",
+          "MISSING_REFERENCE",
+          "INVALID_SIGNATURE",
+          "INVALID_DIGEST_LINKAGE",
+          "NOT_YET_VALID",
+          "EXPIRED",
+          "INVALID_TIME_INTERVAL",
+          "TRUST_SNAPSHOT_INVALID",
+          "UNTRUSTED_ISSUER",
+          "UNTRUSTED_KEY",
+          "MIXED_TRUST_ROOT",
+          "KEY_NOT_USABLE",
+          "CHAIN_PARENT_MISSING",
+          "CHAIN_PARENT_AMBIGUOUS",
+          "CHAIN_BOUNDS_EXCEEDED",
+          "ATTENUATION_VIOLATION",
+          "STATUS_UNAVAILABLE",
+          "STATUS_STALE",
+          "STATUS_ROLLBACK",
+          "REVOKED",
+          "SIGNER_MISMATCH",
+          "AUDIENCE_MISMATCH",
+          "ACTION_NOT_ALLOWED",
+          "RESOURCE_NOT_ALLOWED",
+          "TASK_NOT_ALLOWED",
+          "REPLAY_DETECTED",
+          "OFFLINE_REPLAY_UNAVAILABLE"
+        ]
+      }
+    },
+    "status_fresh": {
+      "type": "boolean"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "verifier_now": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "warnings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "NOT_ALL_STAGES_EXECUTED",
+          "OFFLINE_STATUS_NOT_FRESH",
+          "OFFLINE_REPLAY_NOT_CHECKED",
+          "HISTORICAL_SNAPSHOT"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,674 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-proof.invalid/schema/v1/artifacts.schema.json",
+  "title": "Agent Proof v1 signed artifacts",
+  "$defs": {
+    "credential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "issuer",
+        "subject",
+        "public_jwk",
+        "key_id",
+        "not_before",
+        "expires_at",
+        "credential_purpose",
+        "authority_ceiling"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "credential"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "issuer": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "subject": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "public_jwk": {
+          "$ref": "common.schema.json#/$defs/jwk"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/key_id"
+        },
+        "not_before": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "credential_purpose": {
+          "enum": [
+            "agent-root-authority",
+            "agent-key-binding"
+          ]
+        },
+        "authority_ceiling": {
+          "$ref": "common.schema.json#/$defs/constraints"
+        }
+      }
+    },
+    "delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "delegator",
+        "delegate",
+        "parent_ref",
+        "constraints"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "delegation"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "delegator": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "delegate": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "parent_ref": {
+          "$ref": "common.schema.json#/$defs/ref"
+        },
+        "constraints": {
+          "$ref": "common.schema.json#/$defs/constraints"
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "signer",
+        "delegation_ref",
+        "request_id",
+        "nonce",
+        "not_before",
+        "expires_at",
+        "action",
+        "resource",
+        "task",
+        "audience",
+        "payload_digest",
+        "task_context_digest"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "request"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "signer": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "delegation_ref": {
+          "$ref": "common.schema.json#/$defs/ref"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/uuidv7"
+        },
+        "nonce": {
+          "$ref": "common.schema.json#/$defs/b64u32"
+        },
+        "not_before": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "action": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+        },
+        "resource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "uri",
+                "opaque"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        "task": {
+          "$ref": "common.schema.json#/$defs/uuidv7"
+        },
+        "audience": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]{0,252}$"
+        },
+        "payload_digest": {
+          "$ref": "common.schema.json#/$defs/digest"
+        },
+        "task_context_digest": {
+          "$ref": "common.schema.json#/$defs/digest"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "authority_refs",
+        "request_ref",
+        "predicate_type",
+        "subject",
+        "predicate",
+        "predecessor_refs"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "provenance"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "authority_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ref"
+          }
+        },
+        "request_ref": {
+          "$ref": "common.schema.json#/$defs/ref"
+        },
+        "predicate_type": {
+          "const": "https://agent-proof.invalid/spec/v1/provenance"
+        },
+        "subject": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "digest"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "digest": {
+              "$ref": "common.schema.json#/$defs/digest"
+            }
+          }
+        },
+        "predicate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "action",
+            "resource",
+            "audience",
+            "input_digests",
+            "output_digests",
+            "result"
+          ],
+          "properties": {
+            "task": {
+              "$ref": "common.schema.json#/$defs/uuidv7"
+            },
+            "action": {
+              "type": "string"
+            },
+            "resource": {
+              "$ref": "common.schema.json#/$defs/resource"
+            },
+            "audience": {
+              "type": "string"
+            },
+            "input_digests": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/digest"
+              }
+            },
+            "output_digests": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/digest"
+              }
+            },
+            "result": {
+              "type": "string"
+            }
+          }
+        },
+        "predecessor_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/ref"
+          }
+        }
+      }
+    },
+    "key_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "publisher",
+        "effective_at",
+        "as_of",
+        "valid_until",
+        "sequence",
+        "previous_digest",
+        "target_key_id",
+        "state"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "key_status"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "publisher": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "effective_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "as_of": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "valid_until": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "previous_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_key_id": {
+          "$ref": "common.schema.json#/$defs/key_id"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "retired",
+            "compromised",
+            "revoked"
+          ]
+        }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "publisher",
+        "effective_at",
+        "as_of",
+        "valid_until",
+        "sequence",
+        "previous_digest",
+        "target_type",
+        "target_id",
+        "reason"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "revocation"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "publisher": {
+          "$ref": "common.schema.json#/$defs/principal"
+        },
+        "effective_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "as_of": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "valid_until": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "previous_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_type": {
+          "enum": [
+            "credential",
+            "key",
+            "delegation"
+          ]
+        },
+        "target_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "key_rotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "id",
+        "issued_at",
+        "proof",
+        "old_key_id",
+        "new_key_id",
+        "activation_time",
+        "retirement_time",
+        "sequence",
+        "previous_digest",
+        "publisher"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "common.schema.json#/$defs/version"
+        },
+        "kind": {
+          "const": "key_rotation"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/artifact_id"
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "kid": {
+              "$ref": "common.schema.json#/$defs/key_id"
+            },
+            "sig": {
+              "$ref": "common.schema.json#/$defs/b64u64"
+            }
+          }
+        },
+        "old_key_id": {
+          "$ref": "common.schema.json#/$defs/key_id"
+        },
+        "new_key_id": {
+          "$ref": "common.schema.json#/$defs/key_id"
+        },
+        "activation_time": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "retirement_time": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "previous_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publisher": {
+          "$ref": "common.schema.json#/$defs/principal"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/credential"
+    },
+    {
+      "$ref": "#/$defs/delegation"
+    },
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/provenance"
+    },
+    {
+      "$ref": "#/$defs/key_status"
+    },
+    {
+      "$ref": "#/$defs/revocation"
+    },
+    {
+      "$ref": "#/$defs/key_rotation"
+    }
+  ]
+}

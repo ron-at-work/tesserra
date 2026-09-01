@@ -1,0 +1,42 @@
+# Milestone 1 documentation-only unlock gate
+
+**Status:** Accepted for documentation; proposed pending RFC review and explicit user approval.
+
+Plan approval authorizes documentation creation only. It does not authorize manifests, package-manager locks, source, applications, migrations, generated SDKs, runtime dependencies, or implementation tests that require such artifacts.
+
+## Required evidence before implementation
+
+| Check | Required approver/evidence |
+| --- | --- |
+| Protocol RFC | Versioned objects, canonical bytes, signing inputs, trust and attenuation semantics, limits, replay, revocation/rotation, ordered error precedence, and closed codes complete. |
+| Standards-gap analysis | Current dated primary citations; every project-defined field has a documented gap; adapters do not claim replacement or endorsement. |
+| Threat model | Assets/boundaries/flows plus critical/high threats linked to RFC control and vector/test or explicit accepted assumption. |
+| Decision package | ADRs accepted, frozen fields reconciled with RFC, every implementation technology choice has owner phase/deadline/exception treatment, dependency graph and local data controls reviewed. |
+| Vectors | Positive, negative, malformed, time, replay, status, rotation, and multi-hop coverage with canonical intermediates; independent reproduction succeeds. |
+| Traceability | Every master requirement links to RFC, threat/control, architecture decision, future phase, and conformance vector. |
+| Documentation quality | Lint, links, citations, schema/example validation, source-register freshness, and final IETF-draft status recheck pass. |
+| No-code audit | Repository diff contains only allowed documentation and versioned protocol-vector fixture paths; no code/manifests/migrations/generated artifacts/dependencies exist. |
+| Sign-off | Named protocol, security, implementation, and product reviewers record accepted residual risks and explicitly state “Approved for implementation.” |
+
+## Freeze and amendment rule
+
+The approval freezes wire bytes, canonicalization behavior, trust semantics, decision precedence, and adapter status for the approved MVP. In current RFC 0001 §§1–6, this includes the verifier stage order **PARSE → VERSION → CRYPTO → TIME → TRUST → CHAIN → STATUS → BINDING → REPLAY**; the Agent Proof artifact namespace (`agent-proof/v1`, `urn:agent-proof:*`, and `https://agent-proof.invalid/*`); the `agid` / `agid:v1:` structured-agent-ID scheme; and credential `authority_ceiling` as the cryptographic root authority grant subject to attenuation. A change to any frozen item requires an RFC amendment, impact analysis, revised vectors, and renewed approval before implementation uses it.
+
+## Current status as of 2026-09-01
+
+| Area | Status | Remaining review blocker |
+| --- | --- | --- |
+| RFC draft and protocol schemas | Present as a seven-section RFC: §1 dependencies/scope/labels; §2 bytes/parsing/proof; §3 identity/constraints/selectors; §4 trust/roots/status/rotation/provenance; §5 requests/binding/replay; §6 ordered verification/output; §7 conformance/limitations. | Cross-document review must confirm schemas, examples, and fixtures use the same frozen fields and §6 precedence. |
+| Architecture decision package | Present; synchronized to the seven-section RFC, including parser/version/schema staging, client/server separation, provider ports, data lifecycle, local trust reload, and one canonical technology-decision register. | Protocol, security, implementation, and product reviewers must accept it. |
+| Standards/source material | Source register and standards analysis files are present. | Complete freshness, citation, and link review, including final review-day draft-status recheck. |
+| Threat model | Present at [`docs/security/threat-model.md`](../security/threat-model.md), with its own current record inventory, controls, residual risks, phase owners, and approval criteria. | Reviewers must verify current RFC anchors/traceability and resolve or accept the residual risks recorded by the threat model. |
+| Conformance vectors | Present at [`tests/conformance/v1/`](../../tests/conformance/v1/). [`manifest.json`](../../tests/conformance/v1/manifest.json) is the authoritative case/threat-family index; [`self-check.py`](../../tests/conformance/v1/self-check.py) currently passes for the final checked-in corpus and emits the authoritative complete-case, key-ID, artifact-ID, and signature reproduction totals. | Record the passing self-check output in the review record, confirm manifest/fixture completeness against RFC 0001 §§2–7 and threat-model `V-*` mappings, and record independent reproduction. |
+| Traceability | Requirements traceability file is present. | Verify every requirement has current RFC-section, threat/control, ADR, phase, and vector links. |
+| Documentation quality | Review script/checklist, fixture self-check, and documentation-only audit are present. | Record passing self-check/audit output, links, citations, schema/example validation, and final documentation review results. |
+| Sign-off | Not recorded. | Name reviewers, record accepted residual risks, and record the explicit “Approved for implementation” statement. |
+
+## Current blockers
+
+1. Complete the remaining human review: current-RFC-section/traceability review, standards freshness/citation/link review, threat residual-risk disposition, fixture/threat-mapping completeness review, and documentation validation.
+2. Record the current passing self-check output and independent canonicalization, key-ID, signing, signature, and decision reproduction for the corpus indexed by `tests/conformance/v1/manifest.json`.
+3. Record named reviewer approvals and the explicit user implementation sign-off. The repository remains documentation/vector-only until these review blockers close.

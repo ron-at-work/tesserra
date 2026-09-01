@@ -1,0 +1,526 @@
+{
+  "version": "agent-proof/v1",
+  "fixture_rules": "Every shipped case or raw malformed input appears once. Complete-case evidence IDs name existing artifacts root-to-failure inclusive.",
+  "threat_families": {
+    "V-PARSE": "parser, identifier, canonical encoding/URI",
+    "V-VERSION": "unsupported protocol semantics",
+    "V-CRYPTO": "signature/key confusion",
+    "V-REFERENCE": "missing typed local reference",
+    "V-TIME": "time interval",
+    "V-TRUST": "local root/issuer/key policy",
+    "V-CHAIN": "bounds/parent topology",
+    "V-ESCALATION": "constraint expansion",
+    "V-STATUS": "freshness/rollback/unavailability",
+    "V-REVOCATION": "withdrawn authority",
+    "V-BINDING": "expected context/digests",
+    "V-REPLAY": "separate request-ID and nonce consumption",
+    "V-HISTORY": "explicit archived snapshot verification",
+    "V-ROTATION": "publisher-controlled key rotation timeline"
+  },
+  "cases": [
+    {
+      "path": "cases/action-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "ACTION_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/attenuation.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "ATTENUATION_VIOLATION",
+      "secondary_codes": [],
+      "threats": [
+        "V-ESCALATION"
+      ]
+    },
+    {
+      "path": "cases/audience-mismatch.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "AUDIENCE_MISMATCH",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/chain-bounds.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "CHAIN_BOUNDS_EXCEEDED",
+      "secondary_codes": [],
+      "threats": [
+        "V-CHAIN"
+      ]
+    },
+    {
+      "path": "cases/chain-parent-missing.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "CHAIN_PARENT_MISSING",
+      "secondary_codes": [],
+      "threats": [
+        "V-CHAIN"
+      ]
+    },
+    {
+      "path": "cases/digest-linkage.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "INVALID_DIGEST_LINKAGE",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/expired.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "EXPIRED",
+      "secondary_codes": [],
+      "threats": [
+        "V-TIME"
+      ]
+    },
+    {
+      "path": "cases/historical-snapshot.json",
+      "class": [
+        "positive"
+      ],
+      "primary_code": "VALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-STATUS",
+        "V-HISTORY"
+      ]
+    },
+    {
+      "path": "cases/id-mismatch.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "ID_MISMATCH",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "cases/invalid-interval.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "INVALID_TIME_INTERVAL",
+      "secondary_codes": [],
+      "threats": [
+        "V-TIME"
+      ]
+    },
+    {
+      "path": "cases/invalid-signature.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "INVALID_SIGNATURE",
+      "secondary_codes": [],
+      "threats": [
+        "V-CRYPTO"
+      ]
+    },
+    {
+      "path": "cases/key-id-mismatch.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "KEY_ID_MISMATCH",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "cases/key-not-usable.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "KEY_NOT_USABLE",
+      "secondary_codes": [],
+      "threats": [
+        "V-TRUST"
+      ]
+    },
+    {
+      "path": "cases/missing-reference.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "MISSING_REFERENCE",
+      "secondary_codes": [],
+      "threats": [
+        "V-REFERENCE"
+      ]
+    },
+    {
+      "path": "cases/mixed-trust-root.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "MIXED_TRUST_ROOT",
+      "secondary_codes": [],
+      "threats": [
+        "V-TRUST"
+      ]
+    },
+    {
+      "path": "cases/noncanonical-uri.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "NON_CANONICAL",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "cases/not-yet-valid.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "NOT_YET_VALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-TIME"
+      ]
+    },
+    {
+      "path": "cases/offline-inspection.json",
+      "class": [
+        "positive"
+      ],
+      "primary_code": "VALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-CRYPTO"
+      ]
+    },
+    {
+      "path": "cases/offline-replay.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "OFFLINE_REPLAY_UNAVAILABLE",
+      "secondary_codes": [],
+      "threats": [
+        "V-REPLAY"
+      ]
+    },
+    {
+      "path": "cases/positive-two-hop.json",
+      "class": [
+        "positive"
+      ],
+      "primary_code": "VALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-CRYPTO"
+      ]
+    },
+    {
+      "path": "cases/replay-duplicate.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "REPLAY_DETECTED",
+      "secondary_codes": [],
+      "threats": [
+        "V-REPLAY"
+      ]
+    },
+    {
+      "path": "cases/resource-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "RESOURCE_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/revoked.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "REVOKED",
+      "secondary_codes": [],
+      "threats": [
+        "V-REVOCATION"
+      ]
+    },
+    {
+      "path": "cases/rotation-planned.json",
+      "class": [
+        "positive"
+      ],
+      "primary_code": "VALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-STATUS",
+        "V-ROTATION"
+      ]
+    },
+    {
+      "path": "cases/signer-mismatch.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "SIGNER_MISMATCH",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/status-rollback.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "STATUS_ROLLBACK",
+      "secondary_codes": [],
+      "threats": [
+        "V-STATUS"
+      ]
+    },
+    {
+      "path": "cases/status-stale.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "STATUS_STALE",
+      "secondary_codes": [],
+      "threats": [
+        "V-STATUS"
+      ]
+    },
+    {
+      "path": "cases/status-unavailable.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "STATUS_UNAVAILABLE",
+      "secondary_codes": [],
+      "threats": [
+        "V-STATUS"
+      ]
+    },
+    {
+      "path": "cases/task-not-allowed.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "TASK_NOT_ALLOWED",
+      "secondary_codes": [],
+      "threats": [
+        "V-BINDING"
+      ]
+    },
+    {
+      "path": "cases/trust-snapshot-invalid.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "TRUST_SNAPSHOT_INVALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-TRUST"
+      ]
+    },
+    {
+      "path": "cases/unsupported-algorithm.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNSUPPORTED_ALGORITHM",
+      "secondary_codes": [],
+      "threats": [
+        "V-VERSION"
+      ]
+    },
+    {
+      "path": "cases/unsupported-critical.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNSUPPORTED_CRITICAL_SEMANTICS",
+      "secondary_codes": [],
+      "threats": [
+        "V-VERSION"
+      ]
+    },
+    {
+      "path": "cases/unsupported-kind.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNSUPPORTED_KIND",
+      "secondary_codes": [],
+      "threats": [
+        "V-VERSION"
+      ]
+    },
+    {
+      "path": "cases/unsupported-resource-type.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNSUPPORTED_RESOURCE_TYPE",
+      "secondary_codes": [],
+      "threats": [
+        "V-VERSION"
+      ]
+    },
+    {
+      "path": "cases/unsupported-version.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNSUPPORTED_VERSION",
+      "secondary_codes": [],
+      "threats": [
+        "V-VERSION"
+      ]
+    },
+    {
+      "path": "cases/untrusted-issuer.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNTRUSTED_ISSUER",
+      "secondary_codes": [],
+      "threats": [
+        "V-TRUST"
+      ]
+    },
+    {
+      "path": "cases/untrusted-key.json",
+      "class": [
+        "negative",
+        "complete-artifact"
+      ],
+      "primary_code": "UNTRUSTED_KEY",
+      "secondary_codes": [],
+      "threats": [
+        "V-TRUST"
+      ]
+    },
+    {
+      "path": "malformed/duplicate-member.json",
+      "class": [
+        "malformed",
+        "raw"
+      ],
+      "primary_code": "DUPLICATE_MEMBER",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "malformed/complete-artifact-noncanonical-trailing-bits.json",
+      "class": [
+        "malformed",
+        "raw"
+      ],
+      "primary_code": "NON_CANONICAL",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "malformed/malformed-utf8.json",
+      "class": [
+        "malformed",
+        "raw"
+      ],
+      "primary_code": "MALFORMED_UTF8",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "malformed/malformed-json.json",
+      "class": [
+        "malformed",
+        "raw"
+      ],
+      "primary_code": "MALFORMED_JSON",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ]
+    },
+    {
+      "path": "malformed/schema-invalid-complete-envelope.json",
+      "class": [
+        "malformed",
+        "raw"
+      ],
+      "primary_code": "SCHEMA_INVALID",
+      "secondary_codes": [],
+      "threats": [
+        "V-PARSE"
+      ],
+      "deliberate_schema_invalid": true,
+      "deliberate_schema_invalid_reason": "verification_context omitted from otherwise complete case envelope"
+    }
+  ]
+}
