@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
 const app = process.argv[2];
-if (app !== 'landing' && app !== 'dashboard')
-  throw new Error('Expected app name: landing or dashboard.');
+if (app !== 'landing' && app !== 'dashboard' && app !== 'docs')
+  throw new Error('Expected app name: landing, dashboard, or docs.');
 
 const result = spawnSync(
   'corepack',

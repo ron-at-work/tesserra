@@ -2,93 +2,80 @@
 
 > Verifiable authority evidence for agent actions.
 
-ATTEST is the configurable display name for the Agent Proof reference implementation. It verifies signed claims against configured local trust policy. It does **not** prove a signer is honest, code is safe, execution is correct, a runtime is uncompromised, status is globally fresh offline, or a system is available.
+[![CI](https://github.com/ron-at-work/app/actions/workflows/ci.yml/badge.svg)](https://github.com/ron-at-work/app/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node.js 24](https://img.shields.io/badge/node-24.11.1-5FA04E?logo=nodedotjs&logoColor=white)](.node-version)
 
-## Status and roadmap
+ATTEST is a local-first reference implementation for verifying signed identity, delegation, and request evidence under configured trust policy. It gives a receiving system deterministic answers about the evidence it was given: who signed it, which authority chain it carries, and whether its bindings pass the supplied policy.
 
-The shipped workspace contains identity/trust primitives, deterministic protocol/core verification, delegation/request/provenance helpers, frozen conformance evidence, adapter packages, and separate dashboard/landing applications. The CLI supports a local delegation/request fixture flow and local provenance graph inspection/export. Rotation and revocation issuance fail closed until lifecycle and distinct status-authority workflows exist; `revoked` only reports locally stored records. Public surfaces are documented by their actual implementation status.
+**Source status:** the repository is available as source, but it is not a published package distribution or production-ready security service. The release workflow and a `0.1.0` changelog entry describe release preparation; consumers should build from a pinned commit and run the conformance checks below. The display name is configurable and is not a wire identifier or package namespace.
 
-| Phase | Capability                                           | Current repository status                                                                                                                                        |
-| ----- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Identity, local trust, offline identity verification | Implemented                                                                                                                                                      |
-| 2–5   | Delegation, signed requests, lifecycle, provenance   | Local CLI/API/SDK evidence flows and graph inspection exist; rotation, status-authority revocation issuance, online replay, and remote provenance remain partial |
-| 6–8   | MCP, SPIFFE, A2A bindings                            | Adapter packages exist; compatibility claims remain constrained by adapter documentation                                                                         |
-| 9     | Local operations dashboard                           | Separate typed local-API client application                                                                                                                      |
-| 10    | Public landing and release completion                | Separate static application plus release controls                                                                                                                |
+- **Landing app:** [`apps/landing`](apps/landing/README.md) is the public, static project introduction.
+- **Docs site:** [`apps/docs`](apps/docs/) is the separately built documentation site; the repository [documentation index](docs/README.md) and [RFC](docs/rfcs/0001-attest-v1-wire-protocol.md) remain its source material.
+- **Dashboard app:** [`apps/dashboard`](apps/dashboard/README.md) is a separate local operations UI; it is not a hosted service.
 
-The actual `agentctl` surface is `init`; `identity create`, `inspect`, and `rotate`; `delegate create`, `inspect`, and `verify`; `request sign` and `verify`; `revoke`; `revoked`; `trust add` and `list`; and `provenance inspect` and `export`. The loopback HTTP surface serves identity, trust-snapshot, delegation persistence/read/list, delegation/request verification, revocation read, and event-listing routes. `POST /v1/revocations` fails closed until a distinct status authority is configured; there is no rotation, request-signing, or provenance-graph HTTP route. See the [CLI reference](docs/api/cli.md) and [local API reference](docs/api/local-api.md) for exact behavior.
+## What it does—and does not do
 
-See the [roadmap](docs/guides/roadmap.md), [architecture navigation](docs/README.md), and [RFC](docs/rfcs/0001-attest-v1-wire-protocol.md) for exact scope.
+ATTEST currently supports local identity and trust setup, deterministic offline identity/delegation/request verification, frozen protocol conformance vectors, a typed loopback API boundary, a CLI, SDK helpers, and narrowly scoped MCP, SPIFFE, and A2A adapter helpers.
 
-## Requirements
+It does **not** prove a signer is honest, code is safe, execution was correct, or a runtime is uncompromised. It does not provide global offline freshness or availability. It does not replace SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, an authorization server, or a policy engine.
 
-- **Node.js 24.11.1**, pinned in [`.node-version`](.node-version). Node 22 and earlier are unsupported.
-- Corepack, distributed with supported Node releases.
+## Quick start: verify shipped evidence
 
-The repository pins pnpm `11.25.0`. Use Corepack and pnpm; do not install workspace dependencies with npm or Yarn.
-
-## Quick start
-
-Follow the complete, runnable walkthrough in [docs/guides/quick-start.md](docs/guides/quick-start.md). The short version establishes isolated local identity/trust state and verifies the checked-in two-hop delegation/request evidence:
+Use Node **24.11.1** (the pinned development and CI version), enable Corepack, and run the checked verifier against the included two-hop request evidence:
 
 ```sh
 git clone https://github.com/ron-at-work/app.git
 cd app
 corepack enable
 corepack pnpm install --frozen-lockfile
-
-export AGENTCTL_HOME="$(mktemp -d)"
-export AGENTCTL_PASSPHRASE='use-a-secret-from-a-file-or-secret-store'
-corepack pnpm --filter @agent-proof/cli exec agentctl init
-corepack pnpm --filter @agent-proof/cli exec agentctl identity create \
-  --agent agid:v1:example.test/quick-start \
-  --dev-self-issue --json
-
 corepack pnpm build
 corepack pnpm --filter @agent-proof/core test
-corepack pnpm benchmark
 ```
 
-`--dev-self-issue` is explicitly for isolated fixtures and never establishes trust automatically. Production issuance requires configured issuer/trust policy. The benchmark verifies a real positive two-hop request fixture; it does not publish or infer performance claims.
+The final command verifies every frozen conformance case, including a positive signed request with two attenuating delegations. This is deterministic and offline; it does not configure a production issuer or establish trust in a deployed system.
 
-## Workspace structure
+To create isolated fixture identity/trust state, follow the full [quick start guide](docs/guides/quick-start.md). See the [API index](docs/api/README.md) for the CLI, SDK, and loopback API, and [examples](examples/README.md)—especially [delegated request verification](examples/delegated-request/README.md)—for checked evidence walkthroughs. For a measured local repetition of the same positive vector, run `corepack pnpm benchmark`.
 
-```text
-config/      Configurable product presentation data and schema.
-docs/        RFC, security, architecture, guides, API, adapter, and release documentation.
-examples/    Executable, checked examples based on shipped behavior.
-packages/    Protocol, core, transport, SDK, CLI, storage, and adapter packages.
-apps/        Independently built dashboard and landing surfaces.
-tooling/     Runtime, documentation, package-boundary, benchmark, and release checks.
-tests/       Frozen protocol conformance vectors.
-```
+## Implementation status
 
-All package projects use native ESM, strict TypeScript, explicit exports, and declared workspace dependencies. Dashboard and landing remain separate surfaces: the dashboard uses a typed local-API boundary and cannot import local crypto, storage, server, host, or adapter internals; the landing is static/public and cannot import workspace package internals.
+| Area                                        | Status      | Notes                                                                                                                                  |
+| ------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity, local trust, offline verification | Implemented | CLI, loopback API, SDK verification, encrypted local keys, SQLite foundations, and conformance vectors.                                |
+| Delegation and signed requests              | Partial     | Local CLI issuance/inspection and deterministic verification exist; online replay consumption and a complete operator workflow do not. |
+| Revocation and rotation                     | Partial     | Schemas and storage foundations exist; the default CLI/API fail closed without a distinct status authority and atomic lifecycle flow.  |
+| Provenance                                  | Partial     | Local graph inspection/export exists; remote graph, multi-user redaction, and HTTP graph/export routes do not.                         |
+| MCP, SPIFFE/SPIRE, and A2A                  | Partial     | Adapter helpers are bounded integrations, not replacements for their underlying protocols.                                             |
+| Landing, dashboard, and docs site           | Partial     | Three separate applications exist: landing is static, dashboard is a local API client, and docs site publishes project documentation.  |
+| Package publication and supported release   | Planned     | No packages or production release are claimed by this README.                                                                          |
 
-## Commands
+See the detailed [roadmap](docs/guides/roadmap.md) for phase boundaries and release criteria.
+
+## Interfaces
+
+- **CLI:** [`agentctl`](docs/api/cli.md) initializes local fixture state, creates and inspects identities, creates/verifies local delegation and request evidence, manages local fixture trust, and inspects/exports local provenance. Rotation and revocation issuance return explicit fail-closed errors in the default profile.
+- **SDK:** [`@agent-proof/sdk`](docs/api/sdk.md) exposes deterministic offline verifiers, protocol types, display helpers, and the typed local API client.
+- **Local API:** the [loopback HTTP API](docs/api/local-api.md) serves identity, trust, verification, and conditional evidence-persistence routes. It is not remotely exposed by default.
+- **Adapters:** [MCP, SPIFFE/SPIRE, and A2A boundaries](docs/adapters/README.md) explain supported proof mappings and their limitations.
+
+## Develop
+
+The workspace requires pnpm `11.25.0` and supports Node `>=24 <25`; `.node-version` pins the exact version used by CI and the documented workflow: Node `24.11.1`. **Use pnpm through Corepack:** npm and Yarn cannot install this workspace because its catalog and `workspace:*` dependencies require pnpm workspace resolution.
 
 ```sh
-pnpm lint                 # format, ESLint, package/app boundaries, documentation/examples
-pnpm build
-pnpm typecheck
-pnpm test
-pnpm test:clean-clone
-pnpm benchmark            # measures real delegated-request verification only
-pnpm dev:landing          # starts the separate public landing app
-pnpm dev:dashboard        # starts the separate local dashboard app
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm build
+corepack pnpm test:clean-clone
 ```
 
-The benchmark prints its fixture, operation count, warmup count, elapsed time, runtime, platform, architecture, and commit identifier. It intentionally produces no invented baseline or capacity claim. See [benchmark reporting](docs/guides/benchmarking.md).
+Useful local surfaces:
 
-## Product configuration
+```sh
+corepack pnpm dev:landing
+corepack pnpm dev:dashboard
+corepack pnpm dev:docs
+```
 
-[`config/product.json`](config/product.json) is the single source for display name, public links, and visual tokens. It must not define protocol versions, domain identifiers, algorithms, trust, or authorization semantics. `agentctl` remains the fallback command until naming/legal review.
-
-## Documentation and support
-
-- [Documentation index](docs/README.md)
-- [Quick start](docs/guides/quick-start.md)
-- [CLI, local API, and SDK references](docs/api/README.md)
-- [Adapter boundaries](docs/adapters/README.md)
-- [Release process and supply-chain artifacts](docs/release.md)
-- [Contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [license](LICENSE), and [changelog](CHANGELOG.md)
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes, [SECURITY.md](SECURITY.md) to report vulnerabilities privately, and [LICENSE](LICENSE) for the MIT terms. The [release guide](docs/release.md) describes the planned artifact and provenance process without claiming that artifacts have been published.

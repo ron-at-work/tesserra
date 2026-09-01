@@ -21,7 +21,7 @@ const expectedPackages = [
   'adapter-a2a',
   'host-local'
 ];
-const expectedApps = ['dashboard', 'landing'];
+const expectedApps = ['dashboard', 'docs', 'landing'];
 
 const allowedDependencies = new Map([
   ['protocol', new Set()],
@@ -64,6 +64,7 @@ const allowedDependencies = new Map([
 ]);
 const allowedAppDependencies = new Map([
   ['dashboard', new Set(['api-client', 'api-contract', 'protocol'])],
+  ['docs', new Set()],
   ['landing', new Set()]
 ]);
 

@@ -31,13 +31,21 @@ for (const path of markdown) {
 }
 
 const required = [
+  'CONTRIBUTING.md',
+  'SECURITY.md',
+  'LICENSE',
+  'docs/README.md',
   'docs/guides/quick-start.md',
+  'docs/guides/roadmap.md',
+  'docs/api/README.md',
   'docs/api/cli.md',
   'docs/api/local-api.md',
   'docs/api/sdk.md',
   'docs/adapters/README.md',
   'docs/release.md',
+  'examples/README.md',
   'examples/delegated-request/README.md',
+  'apps/docs/package.json',
   'CHANGELOG.md'
 ];
 for (const file of required)
@@ -60,12 +68,45 @@ if (existsSync(rfc)) {
 
 const truthfulness = {
   'README.md': [
-    'CLI supports a local delegation/request fixture flow',
-    'Rotation and revocation issuance fail closed',
-    '`revoked` only reports locally stored records',
-    'The actual `agentctl` surface is',
-    '`POST /v1/revocations` fails closed',
-    'no rotation, request-signing, or provenance-graph HTTP route'
+    'not a published package distribution or production-ready security service',
+    'corepack pnpm --filter @agent-proof/core test',
+    'The final command verifies every frozen conformance case',
+    'It does **not** prove a signer is honest',
+    'Rotation and revocation issuance return explicit fail-closed errors',
+    'npm and Yarn cannot install this workspace',
+    'corepack pnpm dev:docs',
+    '[API index](docs/api/README.md)',
+    '[examples](examples/README.md)'
+  ],
+  'SECURITY.md': [
+    'no published package distribution or supported production release',
+    'do not rely on unreleased code for production security decisions'
+  ],
+  'docs/release.md': [
+    'no published package distribution or supported production release',
+    'do not establish that a tag, package, application artifact, attestation, SBOM, or provenance statement has been published',
+    'all three applications (landing, dashboard, and docs site)',
+    'Landing, dashboard, and docs site build and deploy independently'
+  ],
+  'docs/guides/roadmap.md': [
+    'No package distribution or supported production release is published',
+    'Online exactly-one replay consumption and a complete operator workflow are incomplete',
+    'Public landing, docs site, and release completion'
+  ],
+  'docs/api/README.md': [
+    'examples index',
+    'delegated request verification',
+    '**Implemented** is backed by current source and repository tests'
+  ],
+  'docs/architecture/repository-architecture.md': [
+    '`apps/docs`',
+    'Dashboard, landing, and docs site are intentionally separate projects',
+    'each builds and deploys independently'
+  ],
+  'docs/architecture/public-surfaces.md': [
+    'Landing, dashboard, and docs site are separate applications',
+    'each has an independent build, deployment policy, and test suite',
+    'Landing/docs/release'
   ],
   'docs/api/cli.md': [
     'agentctl delegate create',

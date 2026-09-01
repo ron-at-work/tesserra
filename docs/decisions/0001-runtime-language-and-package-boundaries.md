@@ -9,7 +9,7 @@ The reference implementation needs a reproducible local developer runtime, stron
 
 ## Decision
 
-Adopt the Node 24 LTS, pinned pnpm, pinned TypeScript, native ESM, and strict TypeScript baseline described in [repository architecture](../architecture/repository-architecture.md). The future monorepo contains protocol/core/local-crypto/SQLite/service/API-contract/API-client/API-server/SDK/CLI/adapters/host/dashboard/landing units. The exact allowed dependency graph in that document is normative for implementation architecture.
+Adopt the Node 24 LTS, pinned pnpm, pinned TypeScript, native ESM, and strict TypeScript baseline described in [repository architecture](../architecture/repository-architecture.md). The future monorepo contains protocol/core/local-crypto/SQLite/service/API-contract/API-client/API-server/SDK/CLI/adapters/host/landing/dashboard/docs-site units. The exact allowed dependency graph in that document is normative for implementation architecture.
 
 All internal modules use neutral namespaces. The working display name and product configuration are presentation concerns only. The frozen wire namespaces are the Agent Proof artifact family—`agent-proof/v1`, `urn:agent-proof:*`, and `https://agent-proof.invalid/*`—and the distinct structured-agent-ID scheme/display family `agid` / `agid:v1:`. The `.invalid` namespace is documentation-only, not a service or discovery endpoint. Neither family is derived from product naming or used as a package scope.
 

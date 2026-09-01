@@ -1,10 +1,14 @@
-# Release and supply-chain process
+# Release status and process
 
-This document governs release setup for publishable packages and application artifacts. It does not claim a package or application has been published.
+## Current public status
 
-## Preconditions
+There is **no published package distribution or supported production release** at this time. The repository is available as source. The `0.1.0` changelog entry and GitHub release workflow record release-preparation work; they do not establish that a tag, package, application artifact, attestation, SBOM, or provenance statement has been published.
 
-A release candidate must start from a clean, reviewed commit and pass the repository gate:
+Until a release is published and documented here, evaluate a pinned source commit and run the repository checks. Do not treat an unreleased branch, a workflow definition, or generated `dist/` output as a supported release artifact.
+
+## Release candidate gate
+
+A candidate starts from a clean, reviewed commit and must pass:
 
 ```sh
 corepack pnpm install --frozen-lockfile
@@ -16,32 +20,39 @@ corepack pnpm test:clean-clone
 corepack pnpm benchmark
 ```
 
-Before publishing, confirm protocol/package/database compatibility notes, changelog entries, dependency/license/secret scans, adapter source pins where applicable, and tested examples. A protocol acceptance/canonicalization/decision-precedence change requires an RFC amendment or new protocol version; it is not an ordinary package patch.
+Before publication, confirm changelog and compatibility notes, dependency/license/secret scans, adapter source pins where applicable, and tested examples. A protocol acceptance, canonicalization, or decision-precedence change requires an RFC amendment or a new protocol version; it is not an ordinary package patch.
 
-## Artifacts
+## Planned release artifacts
 
-The release workflow builds every workspace package and both applications before typechecking, then publishes package and application `dist/` directories with a `SHA256SUMS` file, a CycloneDX SBOM, and an in-toto/SLSA provenance statement. Their checksums are signed using GitHub artifact attestation in the trusted CI context. Verify checksums before consuming downloaded artifacts:
+The tag-triggered release workflow is intended to build workspace packages and all three applications (landing, dashboard, and docs site), then attach the following to a GitHub release:
+
+- `SHA256SUMS` for selected `dist/` files;
+- a CycloneDX SBOM;
+- an in-toto/SLSA provenance statement; and
+- GitHub artifact attestations for the release assets.
+
+When those artifacts are published, verify the checksum first:
 
 ```sh
 sha256sum --check SHA256SUMS
 ```
 
-Consumers must independently verify the selected artifact attestation/provenance against the repository, workflow, commit, and release tag. Treat an artifact signature as supply-chain evidence; it does not replace protocol verification or local trust policy.
+Then independently verify the selected provenance or attestation against the repository, workflow, commit, and release tag. Supply-chain evidence does not replace protocol verification or local trust policy.
 
 ## Versioning
 
 - Protocol wire version (`agent-proof/v1`) is independent of package versions.
-- Package versions communicate API/tooling compatibility.
+- Package versions communicate API and tooling compatibility.
 - SQLite migration versions are independent from both.
-- Dashboard and landing build/deploy independently and retain their separate dependency boundaries.
+- Landing, dashboard, and docs site build and deploy independently and keep separate dependency boundaries.
 
-## Release runbook
+## Publishing runbook
 
-1. Draft the release with a versioned section in [CHANGELOG.md](../CHANGELOG.md).
-2. Run the preconditions above on the candidate commit and preserve outputs.
-3. Create and push an annotated `v*` tag. The GitHub release workflow is tag-triggered and uses minimal write/attestation permissions.
-4. Review release assets, checksum file, SBOM, provenance statement, and CI artifact attestations before publishing the GitHub release.
-5. Record any supported protocol versions, migrations, API breaking changes, and adapter compatibility in the release notes.
-6. Publish packages only through the organization’s approved registry credentials and provenance settings; do not move unreviewed tags.
+1. Add a versioned section to [CHANGELOG.md](../CHANGELOG.md).
+2. Run and preserve the candidate-gate output above.
+3. Create and push an annotated `v*` tag from the reviewed commit.
+4. Review the generated release assets, checksums, SBOM, provenance statement, and artifact attestations before publishing the GitHub release.
+5. Publish packages only through approved registry credentials and provenance settings; do not move reviewed tags.
+6. Record supported protocol versions, migrations, breaking API changes, and adapter compatibility in the release notes.
 
-Private keys, passphrases, raw nonces, and unredacted evidence are never release assets.
+Private keys, passphrases, raw nonces, and unredacted evidence must never be release assets.

@@ -25,13 +25,21 @@ describe('public landing page', () => {
 
   it('has touch and reduced-motion accommodations', () => {
     expect(styles).toContain('@media (max-width: 620px)');
-    expect(styles).toMatch(
-      /\.chain\s*\{\s*top:\s*55px;\s*left:\s*50%;\s*transform:\s*translateX\(-50%\);/
-    );
+    expect(styles).toMatch(/\.detail-card\s*\{\s*top:\s*395px;\s*right:\s*20px;\s*left:\s*20px;/);
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     expect(styles).toMatch(
-      /\.graph-edge span\s*\{\s*top:\s*20px;\s*animation:\s*none;\s*opacity:\s*1;/
+      /\.reveal,\s*\.terminal pre\s*\{\s*opacity:\s*1;\s*transform:\s*none;\s*transition:\s*none;\s*\}/
     );
+  });
+
+  it('uses the shared accessible editorial palette and a readable compact type floor', () => {
+    expect(styles).toContain('--ink: #10110f;');
+    expect(styles).toContain('--paper: #e9e5dc;');
+    expect(styles).toContain('--moss: #83a58b;');
+    expect(styles).toContain('--copper: #b97955;');
+    expect(styles).toContain('--clay: #bc7169;');
+    expect(styles).toContain('--quiet: #8a8d85;');
+    expect(styles).not.toMatch(/font:\s*(?:\d+\s+)?(?:8|9|10)px|font-size:\s*(?:8|9|10)px/);
   });
 
   it('allows only an exact env-supplied Vite preview host', () => {

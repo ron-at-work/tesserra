@@ -9,7 +9,7 @@ The project has two audiences with materially different security and deployment 
 
 ## Decision
 
-Keep dashboard and landing as separate applications, artifacts, deployment paths, and test suites. Dashboard is a typed `api-client` user for operations and evidence inspection; it cannot import, directly or transitively, server, service, storage, local-key, or host implementation modules. Landing is a public static documentation/marketing surface with strictly supportable claims. Enforce the quality, conformance, benchmark, release, and compatibility policy in [quality and release architecture](../architecture/quality-and-release-architecture.md).
+Keep landing, dashboard, and docs site as separate applications, artifacts, deployment paths, and test suites. Dashboard is a typed `api-client` user for operations and evidence inspection; it cannot import, directly or transitively, server, service, storage, local-key, or host implementation modules. Landing is a public static introduction with strictly supportable claims; docs site presents approved repository documentation. Enforce the quality, conformance, benchmark, release, and compatibility policy in [quality and release architecture](../architecture/quality-and-release-architecture.md).
 
 Use protocol conformance vectors as a release artifact, property tests for monotonic delegation attenuation and adversarial boundaries, and independent canonicalization/crypto reproduction before protocol freeze. Publish benchmark results only when measured under recorded conditions. Generate SBOM, provenance, checksums, and signatures for release artifacts; verify from a clean clone/consumer.
 

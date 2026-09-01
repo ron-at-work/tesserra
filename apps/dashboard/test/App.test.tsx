@@ -1,8 +1,12 @@
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { allowedDashboardHosts, localApiProxyTarget } from '../src/devConfig';
 import { App } from '../src/App';
 
+const root = resolve(import.meta.dirname, '..');
+const styles = await readFile(resolve(root, 'src/styles.css'), 'utf8');
 const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
 
@@ -57,6 +61,16 @@ describe('dashboard', () => {
     expect(document.querySelector('.graph-lines line')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /agent:local:builder/i }));
     expect(screen.getByText('Selected evidence')).toBeTruthy();
+  });
+
+  it('uses the shared accessible editorial palette and a readable compact type floor', () => {
+    expect(styles).toContain('--ink: #111310;');
+    expect(styles).toContain('--paper: #e8e3d9;');
+    expect(styles).toContain('--moss: #82a78a;');
+    expect(styles).toContain('--copper: #b97955;');
+    expect(styles).toContain('--clay: #bb6f68;');
+    expect(styles).toContain('--dim: #8a8d85;');
+    expect(styles).not.toMatch(/font:\s*(?:\d+\s+)?(?:8|9|10)px|font-size:\s*(?:8|9|10)px/);
   });
 
   it('allows only loopback and the exact configured preview host', () => {

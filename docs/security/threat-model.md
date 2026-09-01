@@ -1,6 +1,6 @@
 # ATTEST MVP Threat Model
 
-- **Status:** Proposed — Milestone 1 documentation-only security input
+- **Status:** Draft — Milestone 1 documentation-only security input
 - **Profile:** ATTEST MVP protocol profile, version 1 (project-defined)
 - **Date:** 2026-09-01
 - **Owner:** Security architecture / Milestone 1 review

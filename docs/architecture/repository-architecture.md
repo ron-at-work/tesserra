@@ -34,6 +34,7 @@ The future packages are:
 - `host-local` — the executable composition host for the local distribution; selects implementations, owns process lifecycle, and starts `api-server`.
 - `apps/dashboard` — local operations interface.
 - `apps/landing` — separately deployed public static site.
+- `apps/docs` — separately built documentation site sourced from approved repository documentation.
 
 ### Exact dependency rules
 
@@ -56,6 +57,7 @@ adapter-a2a -> protocol, core, service
 host-local -> service, crypto-local, storage-sqlite, api-server, adapter-mcp, adapter-spiffe, adapter-a2a
 apps/dashboard -> api-contract, api-client
 apps/landing -> config/product.json and static, generated public documentation only
+apps/docs -> config/product.json and approved static documentation content only
 ```
 
 Additional rules:
@@ -68,7 +70,7 @@ Additional rules:
 6. `api-contract` and `api-client` MUST NOT import `service`, `storage-sqlite`, `crypto-local`, `host-local`, adapters, or any server-only module. `api-server` imports no SQLite/key implementation directly.
 7. `sdk`, `cli`, and dashboard MAY depend only on the public `api-contract`/`api-client` path and offline `protocol`/`core` APIs explicitly exported by `sdk`; they MUST NOT transitively import service, storage, local crypto, host, or server code.
 8. Every adapter invokes the same `core` verifier through service interfaces; no adapter has a second verifier or changes ordered decision precedence.
-9. Web apps MUST NOT import `crypto-local`, `storage-sqlite`, `service`, `api-server`, `host-local`, adapters, private protocol artifacts, or server-only runtime modules. Dashboard access is through the typed local-API boundary; adopting `api-client` is the target consolidation, not a claim about the current dashboard implementation.
+9. Web apps MUST NOT import `crypto-local`, `storage-sqlite`, `service`, `api-server`, `host-local`, adapters, private protocol artifacts, or server-only runtime modules. Dashboard access is through the typed local-API boundary; landing and docs site consume only presentation configuration and approved static content. Adopting `api-client` is the dashboard target consolidation, not a claim about its current implementation.
 10. Enforce these rules with package `exports`, project references, dependency-cruiser/equivalent boundary checks, generated-client import checks, and clean-consumer tests that prove the forbidden modules are absent from client dependency closure.
 
 ## Deterministic core and ports
@@ -101,7 +103,7 @@ A credential cryptographically binds a locally trusted `human` or `service` issu
 
 `config/product.json` is the single future source for display name, product links, legal/support links, and visual tokens. The fallback command name is `agentctl` until naming/legal checks approve an alternative. It MUST NOT supply protocol versions, domain identifiers, cryptographic algorithm IDs, trust decisions, or authorization semantics.
 
-The dashboard and landing page are intentionally distinct projects, artifacts, deployment policies, and test suites. Dashboard is a loopback local operations client; landing is public static content. Neither is a substitute for the other.
+Dashboard, landing, and docs site are intentionally separate projects, artifacts, deployment policies, and test suites. Dashboard is a loopback local operations client; landing is public static content; docs site presents approved repository documentation. None is a substitute for another, and each builds and deploys independently.
 
 ## Canonical implementation technology-decision register
 
