@@ -674,6 +674,16 @@ export function App() {
       </main>
       <footer className="wrap footer">
         <span>{productConfig.displayName} / OPEN SOURCE</span>
+        <span className="built-by">
+          Built by{' '}
+          <a href="https://www.linkedin.com/in/rounit08" target="_blank" rel="noreferrer">
+            Rounit Sinha
+          </a>{' '}
+          ·{' '}
+          <a href="https://building.by" target="_blank" rel="noreferrer">
+            building.by
+          </a>
+        </span>
         <span>LOCAL-FIRST · PROTOCOL-ORIENTED</span>
         <a href={productConfig.links.security}>SECURITY ↗</a>
       </footer>
