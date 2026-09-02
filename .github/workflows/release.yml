@@ -51,7 +51,7 @@ jobs:
             apps/*/dist/
           if-no-files-found: error
       - name: Attest release assets
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             release/**
