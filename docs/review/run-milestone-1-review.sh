@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dependency-free integrity guard for the approved ATTEST Milestone 1 evidence.
+# Dependency-free integrity guard for the approved TESSERRA Milestone 1 evidence.
 # Usage: bash docs/review/run-milestone-1-review.sh [milestone-commit-or-base-ref]
 set -euo pipefail
 
@@ -72,7 +72,7 @@ required_files=(
   docs/milestone-1-review-checklist.md
   docs/review/README.md
   docs/review/run-milestone-1-review.sh
-  docs/rfcs/0001-attest-v1-wire-protocol.md
+  docs/rfcs/0001-tesserra-v1-wire-protocol.md
   docs/security/threat-model.md
   docs/architecture/data-architecture.md
   docs/architecture/milestone-one-gate.md

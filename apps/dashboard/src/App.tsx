@@ -130,13 +130,24 @@ export function App() {
   );
 }
 
+function LogoMark({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M3 4h11v4H7v7H3V4Zm8 6h10v4h-6v6h-4V10Zm8 8h10v10H19V18Zm4 4v2h2v-2h-2Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark" aria-hidden="true">
-        A
-      </span>
-      <span>ATTEST</span>
+      <LogoMark className="brand-mark" />
+      <span>TESSERRA</span>
       <span className="local-chip">LOCAL</span>
     </div>
   );
@@ -333,7 +344,9 @@ function Overview({
           Inspect proof <span>→</span>
         </button>
       </PageHeader>
-      <p className="intro">Monitor this ATTEST node without sending operational data off-device.</p>
+      <p className="intro">
+        Monitor this TESSERRA node without sending operational data off-device.
+      </p>
       <section className="stats" aria-label="Local status">
         <Metric label="Agents" value={agentCount} />
         <Metric label="Trust entries" value={trustedCount} />

@@ -1,6 +1,6 @@
 # Architecture decisions
 
-This directory records the implementation architecture selected for ATTEST Milestone 1. **ATTEST** is a replaceable display name; it MUST NOT become a wire identifier, domain type prefix, or internal package namespace.
+This directory records the implementation architecture selected for TESSERRA Milestone 1. **TESSERRA** is a replaceable display name; it MUST NOT become a wire identifier, domain type prefix, or internal package namespace.
 
 ## Status vocabulary
 

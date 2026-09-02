@@ -51,7 +51,7 @@ const required = [
 for (const file of required)
   if (!existsSync(resolve(root, file))) errors.push(`missing required documentation: ${file}`);
 
-const rfc = resolve(root, 'docs/rfcs/0001-attest-v1-wire-protocol.md');
+const rfc = resolve(root, 'docs/rfcs/0001-tesserra-v1-wire-protocol.md');
 if (existsSync(rfc)) {
   const body = readFileSync(rfc, 'utf8');
   for (const preimage of [

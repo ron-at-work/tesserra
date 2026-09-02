@@ -33,7 +33,7 @@ import {
 import { formatAgentId, parseAgentId } from '@agent-proof/sdk';
 
 const DEFAULT_HOME = '.agent-proof';
-const DEFAULT_PRODUCT_NAME = 'ATTEST';
+const DEFAULT_PRODUCT_NAME = 'TESSERRA';
 const CREDENTIAL_ID = /^urn:agent-proof:v1:sha256:[A-Za-z0-9_-]{43}$/;
 const repositoryProductConfigs = [
   resolve(fileURLToPath(new URL('../../../config/product.json', import.meta.url))),

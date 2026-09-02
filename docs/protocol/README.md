@@ -1,11 +1,11 @@
 # Agent Proof Protocol artifacts
 
-ATTEST is a display name only. The neutral signed/wire namespace is
+TESSERRA is a display name only. The neutral signed/wire namespace is
 `https://agent-proof.invalid`; all v1 values use `agent-proof/v1` and
 `urn:agent-proof:*`. This is a reserved documentation namespace, not a network
 endpoint or trust-discovery mechanism.
 
-The normative contract is [RFC 0001](../rfcs/0001-attest-v1-wire-protocol.md).
+The normative contract is [RFC 0001](../rfcs/0001-tesserra-v1-wire-protocol.md).
 `schemas/` are project-defined Draft 2020-12 documentation schemas. Schema
 shape does not replace strict raw parsing, RFC 8785, deterministic derivation,
 Ed25519 verification, local trust, or ordered verification from the RFC.

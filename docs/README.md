@@ -1,6 +1,6 @@
-# ATTEST documentation
+# TESSERRA documentation
 
-ATTEST is a configurable display name, not a protocol identifier, package namespace, or domain type. The repository is source-available but has no published package distribution or supported production release. Start with the interfaces and status pages below; the RFC and conformance materials define the protocol evidence.
+TESSERRA is a configurable display name, not a protocol identifier, package namespace, or domain type. The repository is source-available but has no published package distribution or supported production release. Start with the interfaces and status pages below; the RFC and conformance materials define the protocol evidence.
 
 ## Start here
 
@@ -17,7 +17,7 @@ ATTEST is a configurable display name, not a protocol identifier, package namesp
 
 | Area                           | Document                                                                                                                                                 | Status                                |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Normative protocol             | [RFC 0001: Protocol Version 1](rfcs/0001-attest-v1-wire-protocol.md)                                                                                     | Project-defined MVP RFC               |
+| Normative protocol             | [RFC 0001: Protocol Version 1](rfcs/0001-tesserra-v1-wire-protocol.md)                                                                                   | Project-defined MVP RFC               |
 | Protocol schemas               | [Protocol artifact index](protocol/README.md)                                                                                                            | Versioned protocol material           |
 | Conformance fixtures           | [`tests/conformance/v1/`](../tests/conformance/v1/)                                                                                                      | Deterministic verification evidence   |
 | Threat model                   | [Threat model](security/threat-model.md)                                                                                                                 | Security analysis and residual limits |

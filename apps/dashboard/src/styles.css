@@ -85,13 +85,9 @@ textarea:focus-visible,
   letter-spacing: 0.15em;
 }
 .brand-mark {
-  display: grid;
   width: 25px;
   height: 25px;
-  place-items: center;
-  border: 1px solid #676b63;
   color: var(--copper);
-  font-size: 12px;
 }
 .local-chip {
   margin-left: auto;

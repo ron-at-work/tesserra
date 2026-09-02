@@ -94,29 +94,10 @@ a:focus-visible {
   font: 700 13px var(--mono);
   letter-spacing: 0.18em;
 }
-.brand i {
-  position: relative;
+.brand svg {
   width: 24px;
   height: 24px;
-  border: 1px solid #6f726a;
-}
-.brand i::before,
-.brand i::after {
-  position: absolute;
-  content: '';
-  background: var(--copper);
-}
-.brand i::before {
-  top: 11px;
-  left: 6px;
-  width: 10px;
-  height: 1px;
-}
-.brand i::after {
-  top: 6px;
-  left: 11px;
-  width: 1px;
-  height: 10px;
+  color: var(--copper);
 }
 .nav-links {
   display: flex;

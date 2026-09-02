@@ -161,8 +161,8 @@ function PageBody({
           <aside className="notice">
             <strong>Project-defined specification</strong>
             <p>
-              ATTEST is a replaceable display name and MUST NOT occur in signed or wire values. This
-              profile does not replace external identity, authorization, workload, or transport
+              TESSERRA is a replaceable display name and MUST NOT occur in signed or wire values.
+              This profile does not replace external identity, authorization, workload, or transport
               standards.
             </p>
           </aside>
@@ -308,6 +308,19 @@ function OverviewActions({
         </p>
       </aside>
     </>
+  );
+}
+
+function LogoMark({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M3 4h11v4H7v7H3V4Zm8 6h10v4h-6v6h-4V10Zm8 8h10v10H19V18Zm4 4v2h2v-2h-2Z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 }
 
@@ -514,7 +527,7 @@ export function App() {
           onClick={() => navigate('overview')}
           aria-label={`${productConfig.displayName} documentation home`}
         >
-          <i aria-hidden="true">+</i>
+          <LogoMark />
           {productConfig.displayName}
         </button>
         <span className="divider" />

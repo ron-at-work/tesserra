@@ -1,6 +1,6 @@
 # Milestone 1 evidence review guide
 
-This directory contains a dependency-free integrity guard for the approved ATTEST Milestone 1 documentation and conformance evidence. U-12 is complete and Phase 1 implementation is authorized. The guard therefore validates the immutable evidence snapshot that approval covered; it does **not** inspect later Phase 1 source, package, dependency, tooling, or application changes as if they were Milestone 1 violations.
+This directory contains a dependency-free integrity guard for the approved TESSERRA Milestone 1 documentation and conformance evidence. U-12 is complete and Phase 1 implementation is authorized. The guard therefore validates the immutable evidence snapshot that approval covered; it does **not** inspect later Phase 1 source, package, dependency, tooling, or application changes as if they were Milestone 1 violations.
 
 ## Run
 

@@ -1,6 +1,6 @@
 {
   "$schema": "./product.schema.json",
-  "displayName": "ATTEST",
+  "displayName": "TESSERRA",
   "tagline": "Verifiable authority evidence for agent actions.",
   "commandName": "agentctl",
   "links": {

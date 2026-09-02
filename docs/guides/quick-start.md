@@ -69,4 +69,4 @@ This repeats only verified delegated-request verification using `positive-two-ho
 
 - Learn the intended [delegation and request lifecycle](delegation-and-requests.md).
 - Use the stable [CLI reference](../api/cli.md), [local API reference](../api/local-api.md), and [SDK reference](../api/sdk.md).
-- Read the [protocol RFC](../rfcs/0001-attest-v1-wire-protocol.md) for normative wire semantics and the [threat model](../security/threat-model.md) before connecting authority to a real tool.
+- Read the [protocol RFC](../rfcs/0001-tesserra-v1-wire-protocol.md) for normative wire semantics and the [threat model](../security/threat-model.md) before connecting authority to a real tool.

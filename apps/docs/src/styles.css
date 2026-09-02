@@ -82,16 +82,10 @@ input:focus-visible {
   font-weight: 780;
   letter-spacing: 0.12em;
 }
-.brand i {
-  display: grid;
+.brand svg {
   width: 24px;
   height: 24px;
-  place-items: center;
-  border: 1px solid #202522;
-  background: var(--copper);
-  font-style: normal;
-  font-size: 18px;
-  font-weight: 400;
+  color: var(--copper-ink);
 }
 .divider {
   width: 1px;
@@ -821,7 +815,7 @@ footer a {
     background: transparent;
     font-size: 19px;
   }
-  .brand i,
+  .brand svg,
   .divider,
   .docs-label,
   .repo-link {

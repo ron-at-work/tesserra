@@ -103,7 +103,7 @@ export const pages: readonly DocumentPage[] = [
     summary:
       'Normative project objects and deterministic processing for identity, delegation, signed requests, trust, status, and provenance.',
     status: 'Partial',
-    source: 'docs/rfcs/0001-attest-v1-wire-protocol.md',
+    source: 'docs/rfcs/0001-tesserra-v1-wire-protocol.md',
     searchable:
       'rfc 0001 protocol wire bytes canonical json jcs ed25519 identity delegation trust status provenance verifier',
     sections: [
@@ -111,7 +111,7 @@ export const pages: readonly DocumentPage[] = [
         title: 'Dependencies, scope, and labels',
         body: [
           'Capitalized requirements use RFC 2119/8174. The profile depends on JSON, I-JSON, JCS, base64url, SHA-256, Ed25519, OKP JWK, RFC 3339 timestamps, and UUIDv7.',
-          'ATTEST is a replaceable display name and MUST NOT occur in signed or wire values. This is a project-defined profile, not an Internet standard or replacement for SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, an authorization server, or a policy engine.'
+          'TESSERRA is a replaceable display name and MUST NOT occur in signed or wire values. This is a project-defined profile, not an Internet standard or replacement for SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, an authorization server, or a policy engine.'
         ]
       },
       {

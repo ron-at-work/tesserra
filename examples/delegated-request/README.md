@@ -14,4 +14,4 @@ The core test executes every conformance case and checks the full expected deter
 node -e 'const f=require("../../tests/conformance/v1/cases/positive-two-hop.json"); console.log(f.artifacts.map(({ kind, id }) => ({ kind, id })))'
 ```
 
-Use the [quick start](../../docs/guides/quick-start.md), [delegation/request guide](../../docs/guides/delegation-and-requests.md), and [RFC](../../docs/rfcs/0001-attest-v1-wire-protocol.md) before relying on this evidence model.
+Use the [quick start](../../docs/guides/quick-start.md), [delegation/request guide](../../docs/guides/delegation-and-requests.md), and [RFC](../../docs/rfcs/0001-tesserra-v1-wire-protocol.md) before relying on this evidence model.

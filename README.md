@@ -1,4 +1,4 @@
-# ATTEST
+# TESSERRA
 
 > Verifiable authority evidence for agent actions.
 
@@ -6,17 +6,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js 24](https://img.shields.io/badge/node-24.11.1-5FA04E?logo=nodedotjs&logoColor=white)](.node-version)
 
-ATTEST is a local-first reference implementation for verifying signed identity, delegation, and request evidence under configured trust policy. It gives a receiving system deterministic answers about the evidence it was given: who signed it, which authority chain it carries, and whether its bindings pass the supplied policy.
+TESSERRA is a local-first reference implementation for verifying signed identity, delegation, and request evidence under configured trust policy. It gives a receiving system deterministic answers about the evidence it was given: who signed it, which authority chain it carries, and whether its bindings pass the supplied policy.
 
 **Source status:** the repository is available as source, but it is not a published package distribution or production-ready security service. The release workflow and a `0.1.0` changelog entry describe release preparation; consumers should build from a pinned commit and run the conformance checks below. The display name is configurable and is not a wire identifier or package namespace.
 
 - **Landing app:** [`apps/landing`](apps/landing/README.md) is the public, static project introduction.
-- **Docs site:** [`apps/docs`](apps/docs/) is the separately built documentation site; the repository [documentation index](docs/README.md) and [RFC](docs/rfcs/0001-attest-v1-wire-protocol.md) remain its source material.
+- **Docs site:** [`apps/docs`](apps/docs/) is the separately built documentation site; the repository [documentation index](docs/README.md) and [RFC](docs/rfcs/0001-tesserra-v1-wire-protocol.md) remain its source material.
 - **Dashboard app:** [`apps/dashboard`](apps/dashboard/README.md) is a separate local operations UI; it is not a hosted service.
 
 ## What it does—and does not do
 
-ATTEST currently supports local identity and trust setup, deterministic offline identity/delegation/request verification, frozen protocol conformance vectors, a typed loopback API boundary, a CLI, SDK helpers, and narrowly scoped MCP, SPIFFE, and A2A adapter helpers.
+TESSERRA currently supports local identity and trust setup, deterministic offline identity/delegation/request verification, frozen protocol conformance vectors, a typed loopback API boundary, a CLI, SDK helpers, and narrowly scoped MCP, SPIFFE, and A2A adapter helpers.
 
 It does **not** prove a signer is honest, code is safe, execution was correct, or a runtime is uncompromised. It does not provide global offline freshness or availability. It does not replace SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, an authorization server, or a policy engine.
 

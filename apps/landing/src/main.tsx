@@ -22,7 +22,7 @@ const details: Record<string, Detail> = {
   },
   authorization: {
     title: 'AUTHORIZATION',
-    uri: 'attest://authorizations/01JX...',
+    uri: 'tesserra://authorizations/01JX...',
     actor: 'HUMAN → AGENT A',
     task: 'issue-421',
     capabilities: ['repository.read', 'test.execute']
@@ -36,7 +36,7 @@ const details: Record<string, Detail> = {
   },
   delegation: {
     title: 'DELEGATION CREDENTIAL',
-    uri: 'attest://delegations/01JD...',
+    uri: 'tesserra://delegations/01JD...',
     actor: 'AGENT A → AGENT B',
     task: 'issue-421',
     capabilities: ['repository.read', 'test.execute']
@@ -50,7 +50,7 @@ const details: Record<string, Detail> = {
   },
   request: {
     title: 'SIGNED REQUEST',
-    uri: 'attest://requests/01JR...',
+    uri: 'tesserra://requests/01JR...',
     actor: 'AGENT B',
     task: 'issue-421',
     capabilities: ['repository.read', 'test.execute']
@@ -116,6 +116,19 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
 function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`reveal ${className}`}>{children}</div>;
+}
+
+function LogoMark({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M3 4h11v4H7v7H3V4Zm8 6h10v4h-6v6h-4V10Zm8 8h10v10H19V18Zm4 4v2h2v-2h-2Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
 }
 
 function ProvenanceGraph() {
@@ -240,7 +253,7 @@ export function App() {
       <nav className={`nav ${compact ? 'is-compact' : ''}`} aria-label="Primary navigation">
         <div className="wrap nav-inner">
           <a className="brand" href="#top" aria-label={`${productConfig.displayName} home`}>
-            <i aria-hidden="true" />
+            <LogoMark />
             {productConfig.displayName}
           </a>
           <div className="nav-links">

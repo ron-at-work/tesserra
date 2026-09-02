@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - vorflux/attest-product
+      - vorflux/tesserra-product
 
 permissions:
   contents: read

@@ -2,7 +2,7 @@
 
 declare global {
   interface Window {
-    __ATTEST_API_BASE_URL__?: string;
+    __TESSERRA_API_BASE_URL__?: string;
   }
 }
 

@@ -1,6 +1,6 @@
 # Boundary scenarios
 
-These scenarios are design tests for the proposed boundaries. They do not prescribe a wire format or claim that any cited protocol natively supplies ATTEST semantics.
+These scenarios are design tests for the proposed boundaries. They do not prescribe a wire format or claim that any cited protocol natively supplies TESSERRA semantics.
 
 ## 1. Local interactive agent invokes an MCP tool
 
@@ -8,11 +8,11 @@ These scenarios are design tests for the proposed boundaries. They do not prescr
 
 1. The runtime proves its workload identity using a locally verified SVID or platform mechanism [S-02–S-06].
 2. The user authenticates and authorizes the OAuth client under the authorization server's policy. The MCP client/server perform the MCP OAuth profile, including resource and issuer handling [M-01, O-04, O-09, O-12].
-3. Local policy creates or recognizes a bounded authority-to-logical-agent delegation assertion. Any evidence of user authorization remains an OAuth/OIDC reference; ATTEST does not mint a token.
-4. The frozen ATTEST verifier binds the intended tool/action, canonical resource, task-context digest, audience, expiry, logical-agent reference, and runtime-evidence reference.
+3. Local policy creates or recognizes a bounded authority-to-logical-agent delegation assertion. Any evidence of user authorization remains an OAuth/OIDC reference; TESSERRA does not mint a token.
+4. The frozen TESSERRA verifier binds the intended tool/action, canonical resource, task-context digest, audience, expiry, logical-agent reference, and runtime-evidence reference.
 5. If an optional MCP binding is negotiated, the proof is additional to—not a replacement for—the OAuth access token.
 
-**Decision boundary:** a valid SVID does not establish user consent; a valid OAuth token does not establish which model/routine acted; a matching `client_id` does not establish a logical agent. If the proof is absent or stripped, the MCP request can follow MCP/OAuth policy but must not be reported as ATTEST-verified.
+**Decision boundary:** a valid SVID does not establish user consent; a valid OAuth token does not establish which model/routine acted; a matching `client_id` does not establish a logical agent. If the proof is absent or stripped, the MCP request can follow MCP/OAuth policy but must not be reported as TESSERRA-verified.
 
 ## 2. Service authority delegates through two agents to an A2A peer
 
@@ -37,7 +37,7 @@ These scenarios are design tests for the proposed boundaries. They do not prescr
 
 1. An authorization server performs token exchange [O-07], or an Entra deployment performs its documented OBO flow [G-06–G-07].
 2. The adapter retains issuer, token subject, actor (`act` when present), client, resource/audience, scope, sender-constraint, and verification time as issuer-scoped facts.
-3. A frozen ATTEST binding can reference those facts only after local policy states how they bind to a logical agent and task.
+3. A frozen TESSERRA binding can reference those facts only after local policy states how they bind to a logical agent and task.
 
 **Decision boundary:** token exchange/OBO may be an authorization mechanism, but it does not provide a portable, generic multi-hop task attenuation model. `sub` remains the AS's subject; it is not renamed to the logical agent. Entra documentation is product documentation, not a cross-vendor protocol specification.
 

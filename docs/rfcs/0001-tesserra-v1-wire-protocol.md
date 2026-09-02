@@ -1,10 +1,10 @@
-# ATTEST — Agent Proof Protocol v1
+# TESSERRA — Agent Proof Protocol v1
 
 **Status:** project-defined MVP specification (normative)  
 **Neutral wire namespace:** `https://agent-proof.invalid` (reserved documentation namespace, not a service)  
 **Wire version:** `agent-proof/v1` — **review baseline:** 2026-09-01
 
-ATTEST is a replaceable display name and MUST NOT occur in signed/wire values.
+TESSERRA is a replaceable display name and MUST NOT occur in signed/wire values.
 This profile is not an Internet standard and does not replace SPIFFE/SPIRE,
 OAuth/OIDC, MCP, A2A, PKI, an authorization server, or a policy engine.
 

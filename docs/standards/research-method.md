@@ -7,7 +7,7 @@
 1. Which published specifications already own workload identity, authorization, token binding, task transport, provenance, revocation, and transparency?
 2. Which agent-oriented materials are standards, drafts, project specifications, or product documentation?
 3. What remains that cannot safely be inferred from those materials: typed principal separation, cross-system delegation attenuation, task-bound evidence, deterministic evidence verification, and provenance linkage?
-4. Where must an ATTEST integration stop to avoid reimplementing SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, or an authorization server?
+4. Where must an TESSERRA integration stop to avoid reimplementing SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, or an authorization server?
 
 ## Source selection and verification
 
@@ -19,9 +19,9 @@
 
 ## Evidence and citation conventions
 
-Citations use source IDs such as **[O-12]**. The source register supplies title, owner, exact version/revision, maturity, dates, canonical and immutable URLs, relevant sections, use, and non-use. A source reference in a table identifies the evidence basis for that row, not an assertion that the owner endorses ATTEST.
+Citations use source IDs such as **[O-12]**. The source register supplies title, owner, exact version/revision, maturity, dates, canonical and immutable URLs, relevant sections, use, and non-use. A source reference in a table identifies the evidence basis for that row, not an assertion that the owner endorses TESSERRA.
 
-“Must,” “should,” and similar terms describe a cited source only when the source is normative. ATTEST design language in this directory is deliberately marked **proposed** and will need a protocol RFC before it becomes normative for the project.
+“Must,” “should,” and similar terms describe a cited source only when the source is normative. TESSERRA design language in this directory is deliberately marked **proposed** and will need a protocol RFC before it becomes normative for the project.
 
 ## Maturity criteria for additional candidates
 

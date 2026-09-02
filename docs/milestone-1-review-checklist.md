@@ -1,4 +1,4 @@
-# ATTEST Milestone 1 implementation-unlock checklist
+# TESSERRA Milestone 1 implementation-unlock checklist
 
 **Current gate status:** APPROVED FOR IMPLEMENTATION — Phase 1 is unlocked.
 
