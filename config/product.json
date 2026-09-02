@@ -4,10 +4,10 @@
   "tagline": "Verifiable authority evidence for agent actions.",
   "commandName": "agentctl",
   "links": {
-    "repository": "https://github.com/ron-at-work/app",
-    "documentation": "https://github.com/ron-at-work/app/tree/main/docs",
-    "security": "https://github.com/ron-at-work/app/security/policy",
-    "issues": "https://github.com/ron-at-work/app/issues"
+    "repository": "https://github.com/ron-at-work/tesserra",
+    "documentation": "https://tesserra-docs.vercel.app",
+    "security": "https://github.com/ron-at-work/tesserra/security/policy",
+    "issues": "https://github.com/ron-at-work/tesserra/issues"
   },
   "visualTokens": {
     "color": {

@@ -60,7 +60,7 @@ writeFileSync(
     predicateType: 'https://slsa.dev/provenance/v1',
     predicate: {
       buildDefinition: {
-        buildType: 'https://github.com/ron-at-work/app/.github/workflows/release.yml',
+        buildType: 'https://github.com/ron-at-work/tesserra/.github/workflows/release.yml',
         externalParameters: subject,
         internalParameters: {},
         resolvedDependencies: []

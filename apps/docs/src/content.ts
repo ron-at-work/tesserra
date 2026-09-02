@@ -22,7 +22,7 @@ export interface DocumentSection {
   };
 }
 
-export const quickStart = `git clone https://github.com/ron-at-work/app.git
+export const quickStart = `git clone https://github.com/ron-at-work/tesserra.git
 cd app
 corepack enable
 corepack pnpm install --frozen-lockfile

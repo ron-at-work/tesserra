@@ -21,5 +21,5 @@ All notable repository changes are recorded here. Versions are package/release v
 
 - Phase 1 identity primitives, deterministic verifier foundations, local storage/host foundations, typed local API/client, SDK, CLI, and frozen protocol conformance fixtures.
 
-[Unreleased]: https://github.com/ron-at-work/app/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/ron-at-work/app/releases/tag/v0.1.0
+[Unreleased]: https://github.com/ron-at-work/tesserra/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ron-at-work/tesserra/releases/tag/v0.1.0

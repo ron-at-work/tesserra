@@ -2,7 +2,7 @@
 
 > Verifiable authority evidence for agent actions.
 
-[![CI](https://github.com/ron-at-work/app/actions/workflows/ci.yml/badge.svg)](https://github.com/ron-at-work/app/actions/workflows/ci.yml)
+[![CI](https://github.com/ron-at-work/tesserra/actions/workflows/ci.yml/badge.svg)](https://github.com/ron-at-work/tesserra/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js 24](https://img.shields.io/badge/node-24.11.1-5FA04E?logo=nodedotjs&logoColor=white)](.node-version)
 
@@ -25,7 +25,7 @@ It does **not** prove a signer is honest, code is safe, execution was correct, o
 Use Node **24.11.1** (the pinned development and CI version), enable Corepack, and run the checked verifier against the included two-hop request evidence:
 
 ```sh
-git clone https://github.com/ron-at-work/app.git
+git clone https://github.com/ron-at-work/tesserra.git
 cd app
 corepack enable
 corepack pnpm install --frozen-lockfile

@@ -5,7 +5,7 @@ This guide uses the real Phase 1 CLI for isolated fixture identity/trust state, 
 ## 1. Install and build
 
 ```sh
-git clone https://github.com/ron-at-work/app.git
+git clone https://github.com/ron-at-work/tesserra.git
 cd app
 corepack enable
 node --version # v24.11.1
