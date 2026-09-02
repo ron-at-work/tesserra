@@ -14,7 +14,7 @@ catalog:
   '@typescript-eslint/eslint-plugin': 8.46.4
   '@typescript-eslint/parser': 8.46.4
   dependency-cruiser: 18.2.0
-  eslint: 9.39.1
+  eslint: 10.9.1
   eslint-config-prettier: 10.1.8
   globals: 17.11.0
   jsdom: 30.0.1
