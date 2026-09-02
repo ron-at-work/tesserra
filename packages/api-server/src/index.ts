@@ -406,6 +406,24 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
     const id = nextRequestId();
     try {
       if (auth !== undefined) {
+        const origin = request.headers.origin;
+        if (typeof origin === 'string' && origin.length > 0) {
+          response.setHeader('access-control-allow-origin', origin);
+          response.setHeader('vary', 'Origin');
+        } else {
+          response.setHeader('access-control-allow-origin', '*');
+        }
+        response.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+        response.setHeader(
+          'access-control-allow-headers',
+          'Authorization, Content-Type, Idempotency-Key'
+        );
+        response.setHeader('access-control-max-age', '86400');
+        if (request.method === 'OPTIONS') {
+          response.statusCode = 204;
+          response.end();
+          return;
+        }
         const authFailure = await verifySupabaseAccessToken(auth, request.headers.authorization);
         if (authFailure !== true) {
           writeJson(response, 401, errorPayload('UNAUTHORIZED', authFailure, id));
