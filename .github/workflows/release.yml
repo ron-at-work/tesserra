@@ -42,7 +42,7 @@ jobs:
           find packages apps -type d -name node_modules -prune -o -type f -path '*/dist/*' -print0 | sort -z | xargs -0 -r sha256sum > release/SHA256SUMS
           node tooling/write-release-metadata.mjs release
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-assets
           path: |
