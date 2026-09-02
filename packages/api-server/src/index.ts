@@ -16,6 +16,7 @@ import {
   type IdentityCredential,
   type IdentityRecord,
   type IdentityService,
+  type RequestVerifier,
   type TrustSnapshot
 } from '@agent-proof/service';
 
@@ -48,12 +49,23 @@ export interface EvidenceApi {
   }>;
 }
 
+export interface SupabaseAuthOptions {
+  /** Supabase project URL, e.g. https://<project-ref>.supabase.co */
+  readonly supabaseUrl: string;
+  /** Service role key sent as the Supabase apikey header. */
+  readonly serviceRoleKey: string;
+}
+
 export interface LocalApiServerOptions {
   readonly service: IdentityService;
   /** Phase 2–5 persistence surface supplied by the concrete host. */
   readonly evidence?: EvidenceApi;
+  /** Online request verification with atomic replay consumption. */
+  readonly requestVerifier?: RequestVerifier;
   readonly host?: string;
   readonly port?: number;
+  /** When set, every request must present a valid Supabase access token instead of loopback trust. */
+  readonly auth?: SupabaseAuthOptions;
   /** Required to enable the security-sensitive configured-trust reload endpoint. */
   readonly trustReloadToken?: string;
   readonly requestId?: () => string;
@@ -340,6 +352,36 @@ function constantTimeMatches(expected: string | undefined, supplied: string | un
   return right.length === left.length && timingSafeEqual(left, padded);
 }
 
+function bearerToken(authorization: string | undefined): string | undefined {
+  if (typeof authorization !== 'string') return undefined;
+  const trimmed = authorization.trimStart();
+  if (trimmed.slice(0, 7).toLowerCase() !== 'bearer ') return undefined;
+  const token = trimmed.slice(7).trim();
+  return token.length > 0 ? token : undefined;
+}
+
+/**
+ * Validates an access token by asking Supabase Auth to resolve the caller.
+ * Returns `true` when Supabase confirms the token, otherwise a short reason
+ * that becomes the 401 error message. Network failures fail closed.
+ */
+async function verifySupabaseAccessToken(
+  auth: SupabaseAuthOptions,
+  authorization: string | undefined
+): Promise<true | string> {
+  const token = bearerToken(authorization);
+  if (token === undefined) return 'authorization bearer token is required';
+  try {
+    const response = await fetch(`${auth.supabaseUrl.replace(/\/+$/, '')}/auth/v1/user`, {
+      headers: { authorization: `Bearer ${token}`, apikey: auth.serviceRoleKey }
+    });
+    if (!response.ok) return 'authorization token is not valid';
+    return true;
+  } catch {
+    return 'authorization token could not be verified';
+  }
+}
+
 function pathParts(url: URL): readonly string[] {
   try {
     return url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
@@ -351,7 +393,8 @@ function pathParts(url: URL): readonly string[] {
 export function createLocalApiServer(options: LocalApiServerOptions): LocalApiServer {
   const host = options.host ?? defaultHost;
   const port = options.port ?? defaultPort;
-  if (!isLoopbackAddress(host))
+  const auth = options.auth;
+  if (auth === undefined && !isLoopbackAddress(host))
     throw new Error('Local API refuses non-loopback binding. Remote exposure is not implemented.');
   const maxBodyBytes = options.maxBodyBytes ?? defaultMaxBodyBytes;
   const reloadFailureLimit = options.reloadFailureLimit ?? defaultReloadFailureLimit;
@@ -362,7 +405,13 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
   const server = createServer(async (request, response) => {
     const id = nextRequestId();
     try {
-      if (
+      if (auth !== undefined) {
+        const authFailure = await verifySupabaseAccessToken(auth, request.headers.authorization);
+        if (authFailure !== true) {
+          writeJson(response, 401, errorPayload('UNAUTHORIZED', authFailure, id));
+          return;
+        }
+      } else if (
         !isLoopbackPeer(request.socket.remoteAddress) ||
         !isLoopbackHostHeader(request.headers.host)
       ) {
@@ -485,11 +534,31 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
         );
         return;
       }
-      if (
-        method === 'POST' &&
-        (url.pathname === '/v1/verifications/delegation' ||
-          url.pathname === '/v1/verifications/request')
-      ) {
+      if (method === 'POST' && url.pathname === '/v1/verifications/request') {
+        const input = verificationInput(await readJson(request, maxBodyBytes));
+        const context = verificationContext(input.context);
+        const trustSnapshot = await options.service.readTrustSnapshot();
+        const requestArtifact = input.artifacts.find((artifact) => artifact.kind === 'request');
+        const result: VerificationResult =
+          options.requestVerifier !== undefined && requestArtifact !== undefined
+            ? await options.requestVerifier.verifyRequest({
+                request: requestArtifact as import('@agent-proof/protocol').ArtifactBase as never,
+                trustSnapshot: trustSnapshot as never,
+                context,
+                now: now(),
+                replayMode: input.replayMode
+              })
+            : verifyArtifacts({
+                artifacts: input.artifacts,
+                trustSnapshot: trustSnapshot as never,
+                context,
+                now: now(),
+                replayMode: input.replayMode
+              });
+        writeJson(response, 200, result);
+        return;
+      }
+      if (method === 'POST' && url.pathname === '/v1/verifications/delegation') {
         const input = verificationInput(await readJson(request, maxBodyBytes));
         const result: VerificationResult = verifyArtifacts({
           artifacts: input.artifacts,
@@ -519,41 +588,43 @@ export function createLocalApiServer(options: LocalApiServerOptions): LocalApiSe
         return;
       }
       if (method === 'POST' && url.pathname === '/v1/trust-snapshots:reload') {
-        const peer = request.socket.remoteAddress ?? 'unknown';
-        const previous = reloadFailures.get(peer);
-        const current = Date.now();
-        if (
-          previous !== undefined &&
-          previous.resetAt > current &&
-          previous.count >= reloadFailureLimit
-        ) {
-          writeJson(
-            response,
-            429,
-            errorPayload('TRUST_RELOAD_THROTTLED', 'trust reload is temporarily throttled', id)
-          );
-          return;
+        if (auth === undefined) {
+          const peer = request.socket.remoteAddress ?? 'unknown';
+          const previous = reloadFailures.get(peer);
+          const current = Date.now();
+          if (
+            previous !== undefined &&
+            previous.resetAt > current &&
+            previous.count >= reloadFailureLimit
+          ) {
+            writeJson(
+              response,
+              429,
+              errorPayload('TRUST_RELOAD_THROTTLED', 'trust reload is temporarily throttled', id)
+            );
+            return;
+          }
+          const supplied = request.headers['x-local-reload-token'];
+          const token = typeof supplied === 'string' ? supplied : undefined;
+          if (!constantTimeMatches(options.trustReloadToken, token)) {
+            const window =
+              previous !== undefined && previous.resetAt > current
+                ? previous
+                : { count: 0, resetAt: current + 60_000 };
+            reloadFailures.set(peer, { count: window.count + 1, resetAt: window.resetAt });
+            writeJson(
+              response,
+              403,
+              errorPayload(
+                'TRUST_RELOAD_FORBIDDEN',
+                'configured local authorization is required to reload trust',
+                id
+              )
+            );
+            return;
+          }
+          reloadFailures.delete(peer);
         }
-        const supplied = request.headers['x-local-reload-token'];
-        const token = typeof supplied === 'string' ? supplied : undefined;
-        if (!constantTimeMatches(options.trustReloadToken, token)) {
-          const window =
-            previous !== undefined && previous.resetAt > current
-              ? previous
-              : { count: 0, resetAt: current + 60_000 };
-          reloadFailures.set(peer, { count: window.count + 1, resetAt: window.resetAt });
-          writeJson(
-            response,
-            403,
-            errorPayload(
-              'TRUST_RELOAD_FORBIDDEN',
-              'configured local authorization is required to reload trust',
-              id
-            )
-          );
-          return;
-        }
-        reloadFailures.delete(peer);
         writeJson(response, 200, trustResponse(await options.service.reloadTrustSnapshot()));
         return;
       }

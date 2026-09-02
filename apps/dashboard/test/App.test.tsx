@@ -2,8 +2,28 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { allowedDashboardHosts, localApiProxyTarget } from '../src/devConfig';
 import { App } from '../src/App';
+
+// The dashboard is gated behind Supabase Auth. Provide a fake signed-in client
+// so the existing dashboard states render without real credentials or a session.
+vi.mock('../src/supabase', () => {
+  const session = { access_token: 'test-token', user: { email: 'tester@example.com' } };
+  const supabase = {
+    auth: {
+      getSession: async () => ({ data: { session }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
+      signInWithOAuth: async () => ({
+        data: { url: 'https://example/oauth', provider: 'google' },
+        error: null
+      }),
+      signOut: async () => ({ error: null })
+    }
+  } as unknown as SupabaseClient;
+  return { supabase, isSupabaseConfigured: true };
+});
 
 const root = resolve(import.meta.dirname, '..');
 const styles = await readFile(resolve(root, 'src/styles.css'), 'utf8');

@@ -1,4 +1,6 @@
-/** Local HTTP models are intentionally limited to publicly exposed API fields. */
+import { DEFAULT_API_BASE_URL } from './devConfig';
+
+/** HTTP models are intentionally limited to publicly exposed API fields. */
 export interface CredentialDto {
   readonly version: 'agent-proof/v1';
   readonly kind: 'credential';
@@ -61,9 +63,19 @@ interface ErrorEnvelope {
   readonly error?: { readonly message?: string };
 }
 
-/** Browser-safe adapter for the local API's published HTTP contract. */
+/** Browser-safe adapter for the API's published HTTP contract. */
 export class LocalDashboardApi implements DashboardApi {
-  public constructor(private readonly baseUrl = import.meta.env.VITE_API_BASE_URL ?? '/api') {}
+  private authToken: string | null = null;
+
+  public constructor(
+    readonly baseUrl = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL
+  ) {}
+
+  /** Attach (or clear) the bearer token used on every authenticated request. */
+  public setAuthToken(token: string | null): void {
+    this.authToken = token;
+  }
+
   public listAgents(): Promise<ListAgentsResponse> {
     return this.request('/v1/agents');
   }
@@ -78,20 +90,19 @@ export class LocalDashboardApi implements DashboardApi {
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
+    const headers: Record<string, string> = {
+      accept: 'application/json',
+      ...(init?.body ? { 'content-type': 'application/json' } : {})
+    };
+    if (this.authToken) {
+      headers.authorization = `Bearer ${this.authToken}`;
+    }
     let response: Response;
     try {
-      response = await fetch(`${this.baseUrl}${path}`, {
-        ...init,
-        headers: {
-          accept: 'application/json',
-          ...(init?.body ? { 'content-type': 'application/json' } : {})
-        }
-      });
+      response = await fetch(`${this.baseUrl}${path}`, { ...init, headers });
     } catch (error) {
       throw new DashboardApiError(
-        error instanceof TypeError
-          ? 'The local API is unreachable.'
-          : 'The local API request failed.',
+        error instanceof TypeError ? 'The API is unreachable.' : 'The API request failed.',
         true
       );
     }
@@ -99,7 +110,7 @@ export class LocalDashboardApi implements DashboardApi {
     if (!response.ok) {
       const error = payload as ErrorEnvelope | undefined;
       throw new DashboardApiError(
-        error?.error?.message ?? `Local API returned ${response.status}.`,
+        error?.error?.message ?? `API returned ${response.status}.`,
         false
       );
     }

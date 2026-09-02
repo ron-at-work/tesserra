@@ -26,6 +26,18 @@ export interface EvidenceRepository {
   consumeReplay?: ReplayStore;
 }
 
+export interface VerifyRequestInput {
+  readonly request: RequestArtifact;
+  readonly trustSnapshot: JsonObject;
+  readonly context: VerificationContext;
+  readonly now: Date;
+  readonly replayMode: 'online' | 'offline';
+}
+
+export interface RequestVerifier {
+  verifyRequest(input: VerifyRequestInput): Promise<VerificationResult>;
+}
+
 export interface DelegationService {
   delegate(
     input: Omit<Parameters<typeof createDelegation>[1], 'signingReference'> & {
@@ -37,13 +49,7 @@ export interface DelegationService {
       readonly signingReference: string;
     }
   ): Promise<RequestArtifact>;
-  verifyRequest(input: {
-    readonly request: RequestArtifact;
-    readonly trustSnapshot: JsonObject;
-    readonly context: VerificationContext;
-    readonly now: Date;
-    readonly replayMode: 'online' | 'offline';
-  }): Promise<VerificationResult>;
+  verifyRequest(input: VerifyRequestInput): Promise<VerificationResult>;
   recordProvenance(
     input: Omit<Parameters<typeof createProvenance>[1], 'signingReference'> & {
       readonly signingReference: string;
@@ -74,6 +80,50 @@ async function chain(
   return result;
 }
 
+/**
+ * Canonical online request verification: assemble evidence, verify, then
+ * atomically consume the replay key only after every signing, trust, status,
+ * binding, and time check succeeds. Duplicate or expired consumption re-runs
+ * with `replay: 'duplicate'` so the decision code reflects the replay.
+ */
+export async function verifyRequestWithReplay(
+  repository: EvidenceRepository,
+  input: VerifyRequestInput
+): Promise<VerificationResult> {
+  const artifacts = [
+    ...(await chain(repository, input.request)),
+    ...(await repository.listStatus())
+  ];
+  const preliminary = verifyArtifacts({
+    artifacts,
+    trustSnapshot: input.trustSnapshot,
+    context: input.context,
+    now: input.now,
+    replayMode: input.replayMode
+  });
+  if (!preliminary.valid || !input.context.replayRequired || input.replayMode === 'offline')
+    return preliminary;
+  if (repository.consumeReplay === undefined)
+    return verifyArtifacts({ ...input, artifacts, replay: 'duplicate' });
+  const outcome = await repository.consumeReplay.consume({
+    audience: input.request.audience,
+    signerKeyId: input.request.proof.kid,
+    requestId: input.request.request_id,
+    nonce: input.request.nonce,
+    expiresAt: new Date(input.request.expires_at)
+  });
+  return outcome === 'consumed'
+    ? preliminary
+    : verifyArtifacts({ ...input, artifacts, replay: 'duplicate' });
+}
+
+/** Verification-only facade without key or randomness dependencies. */
+export function createRequestVerifier(repository: EvidenceRepository): RequestVerifier {
+  return {
+    verifyRequest: (input) => verifyRequestWithReplay(repository, input)
+  };
+}
+
 /** Service-ready facade; all authorization decisions remain in the one core verifier. */
 export function createDelegationService(
   provider: KeyProvider,
@@ -91,37 +141,7 @@ export function createDelegationService(
       await repository.put(artifact);
       return artifact;
     },
-    async verifyRequest(input) {
-      const artifacts = [
-        ...(await chain(repository, input.request)),
-        ...(await repository.listStatus())
-      ];
-      const preliminary = verifyArtifacts({
-        artifacts,
-        trustSnapshot: input.trustSnapshot,
-        context: input.context,
-        now: input.now,
-        replayMode: input.replayMode
-      });
-      if (!preliminary.valid || !input.context.replayRequired || input.replayMode === 'offline')
-        return preliminary;
-      if (repository.consumeReplay === undefined)
-        return verifyArtifacts({ ...input, artifacts, replay: 'duplicate' });
-      const outcome = await repository.consumeReplay.consume({
-        audience: input.request.audience,
-        signerKeyId: input.request.proof.kid,
-        requestId: input.request.request_id,
-        nonce: input.request.nonce,
-        expiresAt: new Date(input.request.expires_at)
-      });
-      return outcome === 'consumed'
-        ? preliminary
-        : verifyArtifacts({
-            ...input,
-            artifacts,
-            replay: 'duplicate'
-          });
-    },
+    verifyRequest: (input) => verifyRequestWithReplay(repository, input),
     async recordProvenance(input) {
       const artifact = await createProvenance(provider, input);
       await repository.put(artifact);

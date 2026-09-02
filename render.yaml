@@ -1,0 +1,21 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Populate the secret values (sync: false) in the Render dashboard; never
+# commit real secret values to this file.
+services:
+  - type: web
+    name: agent-proof-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: '8080'
+      - key: DATA_DIR
+        value: '.data'
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: KEY_PASSPHRASE
+        sync: false

@@ -9,6 +9,8 @@ import {
   isDashboardApiError,
   isOfflineError
 } from './api';
+import { supabase, type Session } from './supabase';
+import { apiDisplayLabel } from './devConfig';
 
 type Route =
   | 'overview'
@@ -37,12 +39,42 @@ const navigation: readonly NavItem[] = [
 ];
 const api = new LocalDashboardApi();
 
+type AuthState =
+  | { readonly status: 'not-configured' }
+  | { readonly status: 'loading' }
+  | { readonly status: 'signed-out' }
+  | { readonly status: 'signed-in'; readonly session: Session };
+
+function useAuth(): AuthState {
+  const [state, setState] = useState<AuthState>(() =>
+    supabase ? { status: 'loading' } : { status: 'not-configured' }
+  );
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setState(
+        data.session ? { status: 'signed-in', session: data.session } : { status: 'signed-out' }
+      );
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setState(session ? { status: 'signed-in', session } : { status: 'signed-out' });
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+  return state;
+}
+
 function initialRoute(): Route {
   const found = navigation.find((item) => `#${item.id}` === window.location.hash);
   return found?.id ?? 'overview';
 }
 
-function useLocalData() {
+function useLocalData(enabled: boolean) {
   const [agents, setAgents] = useState<ApiState<readonly Agent[]>>({ status: 'loading' });
   const [trust, setTrust] = useState<ApiState<Record<string, unknown>>>({ status: 'loading' });
   const refresh = async () => {
@@ -54,7 +86,7 @@ function useLocalData() {
         (error: unknown) =>
           set({
             status: 'error',
-            message: error instanceof Error ? error.message : 'Local API request failed.',
+            message: error instanceof Error ? error.message : 'API request failed.',
             offline: isDashboardApiError(error) && isOfflineError(error)
           })
       );
@@ -70,14 +102,17 @@ function useLocalData() {
     ]);
   };
   useEffect(() => {
+    if (!enabled) return;
     void refresh();
-  }, []);
+  }, [enabled]);
   return { agents, trust, refresh };
 }
 
 export function App() {
+  const auth = useAuth();
+  const signedIn = auth.status === 'signed-in';
   const [route, setRoute] = useState<Route>(initialRoute);
-  const local = useLocalData();
+  const local = useLocalData(signedIn);
   const navigate = (next: Route) => {
     window.location.hash = next;
     setRoute(next);
@@ -87,7 +122,15 @@ export function App() {
     window.addEventListener('hashchange', handler);
     return () => window.removeEventListener('hashchange', handler);
   }, []);
+  useEffect(() => {
+    api.setAuthToken(auth.status === 'signed-in' ? auth.session.access_token : null);
+  }, [auth]);
   const selected = navigation.find((item) => item.id === route)!;
+  const apiLabel = apiDisplayLabel(api.baseUrl);
+
+  if (auth.status === 'not-configured') return <AuthNotConfigured />;
+  if (auth.status === 'loading') return <AuthLoading />;
+  if (auth.status === 'signed-out') return <SignIn />;
 
   return (
     <div className="app-shell">
@@ -99,18 +142,24 @@ export function App() {
             <NavButton key={item.id} item={item} active={route === item.id} onNavigate={navigate} />
           ))}
         </nav>
-        <Connection state={local.agents} />
+        <Connection state={local.agents} host={apiLabel} />
       </aside>
       <header className="mobile-top">
         <Brand />
-        <Connection state={local.agents} compact />
+        <Connection state={local.agents} host={apiLabel} compact />
       </header>
       <main className="main">
         <div className="topbar">
-          <span className="crumb">LOCAL CONTROL PLANE / {selected.label.toUpperCase()}</span>
-          <button className="quiet-button" onClick={() => void local.refresh()}>
-            ↻ Refresh
-          </button>
+          <span className="crumb">CONTROL PLANE / {selected.label.toUpperCase()}</span>
+          <div className="topbar-actions">
+            <button className="quiet-button" onClick={() => void local.refresh()}>
+              ↻ Refresh
+            </button>
+            <span className="user-chip">{auth.session.user.email ?? 'Signed in'}</span>
+            <button className="quiet-button" onClick={() => void supabase?.auth.signOut()}>
+              Sign out
+            </button>
+          </div>
         </div>
         <Page
           route={route}
@@ -172,15 +221,23 @@ function NavButton({
     </button>
   );
 }
-function Connection({ state, compact = false }: { state: ApiState<unknown>; compact?: boolean }) {
+function Connection({
+  state,
+  host,
+  compact = false
+}: {
+  state: ApiState<unknown>;
+  host: string;
+  compact?: boolean;
+}) {
   const label =
     state.status === 'ready'
-      ? 'Local API connected'
+      ? 'API connected'
       : state.status === 'loading'
-        ? 'Checking local API'
+        ? 'Checking the API'
         : state.offline
-          ? 'Local API offline'
-          : 'Local API error';
+          ? 'API offline'
+          : 'API error';
   return (
     <div
       className={`connection ${state.status === 'ready' ? 'connected' : state.status === 'error' ? 'error' : ''}`}
@@ -190,7 +247,7 @@ function Connection({ state, compact = false }: { state: ApiState<unknown>; comp
       {!compact && (
         <>
           <span>{label}</span>
-          <small>127.0.0.1:4318</small>
+          <small>{host}</small>
         </>
       )}
     </div>
@@ -229,7 +286,7 @@ function Page({
           title="Delegations"
           eyebrow="Authority routing"
           description="Issue bounded authority between agents, with explicit scope, audience, and expiry."
-          empty="No delegation records are available from the current local API."
+          empty="No delegation records are available from the current API."
         />
       );
     case 'requests':
@@ -237,8 +294,8 @@ function Page({
         <Unavailable
           title="Requests"
           eyebrow="Decision queue"
-          description="Review inbound requests before any local authority is exercised."
-          empty="No request records are available from the current local API."
+          description="Review inbound requests before any authority is exercised."
+          empty="No request records are available from the current API."
         />
       );
     case 'revocations':
@@ -246,8 +303,8 @@ function Page({
         <Unavailable
           title="Revocations"
           eyebrow="Authority withdrawal"
-          description="Publish and inspect local records that invalidate agents, delegations, or attestations."
-          empty="No revocation records are available from the current local API."
+          description="Publish and inspect records that invalidate agents, delegations, or attestations."
+          empty="No revocation records are available from the current API."
           warning="A revocation is append-only and cannot be undone. Create one only after confirming the exact target identifier."
         />
       );
@@ -286,13 +343,13 @@ function StateNotice({
     return (
       <div className="state loading" role="status">
         <span className="spinner" />
-        Loading local data…
+        Loading data…
       </div>
     );
   if (state.status === 'error')
     return (
       <div className="state error" role="alert">
-        <strong>{state.offline ? 'Local API unavailable.' : 'Could not read local data.'}</strong>
+        <strong>{state.offline ? 'API unavailable.' : 'Could not read data.'}</strong>
         <span>{state.message}</span>
         {retry && (
           <button className="button subtle" onClick={retry}>
@@ -339,15 +396,13 @@ function Overview({
   const trustedCount = trust.status === 'ready' ? Object.keys(trust.data).length : null;
   return (
     <>
-      <PageHeader eyebrow="Local control plane" title="Overview">
+      <PageHeader eyebrow="Control plane" title="Overview">
         <button className="button" onClick={() => onNavigate('verification')}>
           Inspect proof <span>→</span>
         </button>
       </PageHeader>
-      <p className="intro">
-        Monitor this TESSERRA node without sending operational data off-device.
-      </p>
-      <section className="stats" aria-label="Local status">
+      <p className="intro">Monitor this TESSERRA node and inspect its operational state.</p>
+      <section className="stats" aria-label="Service status">
         <Metric label="Agents" value={agentCount} />
         <Metric label="Trust entries" value={trustedCount} />
         <Metric label="Delegations" value={null} unavailable />
@@ -356,25 +411,25 @@ function Overview({
       <div className="split">
         <section className="panel">
           <div className="panel-head">
-            <h2>Recent local activity</h2>
+            <h2>Recent activity</h2>
             <button className="quiet-button" onClick={() => void onRefresh()}>
               Refresh
             </button>
           </div>
           <Empty title="No operations recorded">
             Signed requests, delegations, verification checks, and revocations will appear here in
-            local chronological order.
+            chronological order.
           </Empty>
         </section>
         <section className="panel safeguards">
-          <h2>Local safeguards</h2>
+          <h2>Safeguards</h2>
           <p>
             <b>Encrypted operational state is available.</b> The dashboard never renders private key
             material.
           </p>
           <p>
-            <b>Nothing leaves this device automatically.</b> Local API status reflects only the
-            configured loopback service.
+            <b>No operational data is submitted automatically.</b> API status reflects the
+            configured service.
           </p>
         </section>
       </div>
@@ -398,8 +453,8 @@ function Metric({
         {unavailable
           ? 'Not exposed by this API'
           : value === null
-            ? 'Checking local API'
-            : 'From current local API response'}
+            ? 'Checking the API'
+            : 'From current API response'}
       </small>
     </article>
   );
@@ -410,15 +465,15 @@ function Agents({ agents }: { agents: ApiState<readonly Agent[]> }) {
     <>
       <PageHeader eyebrow="Identity registry" title="Agents" />
       <p className="intro">
-        Manage local signing identities and inspect the authority each one can exercise.
+        Manage signing identities and inspect the authority each one can exercise.
       </p>
       <section className="panel">
         <StateNotice state={agents}>
           {agents.status === 'ready' &&
             (agents.data.length === 0 ? (
               <Empty title="No agents yet">
-                Import an existing identity or create a device-local agent to begin issuing and
-                verifying attestations.
+                Import an existing identity or create an agent to begin issuing and verifying
+                attestations.
               </Empty>
             ) : (
               <AgentTable agents={agents.data} />
@@ -492,7 +547,7 @@ function Trust({ trust }: { trust: ApiState<Record<string, unknown>> }) {
       </section>
       <aside className="notice">
         <strong>Deny by default.</strong> Unrecognized issuers remain rejected until explicitly
-        trusted by the local policy.
+        trusted by the configured policy.
       </aside>
     </>
   );
@@ -533,7 +588,7 @@ function Verification() {
     <>
       <PageHeader eyebrow="Proof inspector" title="Verification" />
       <p className="intro">
-        Validate an attestation locally and review every check before trusting its claim.
+        Validate an attestation and review every check before trusting its claim.
       </p>
       <div className="split verify">
         <form className="panel" onSubmit={submit}>
@@ -548,9 +603,9 @@ function Verification() {
             spellCheck="false"
           />
           <div className="form-footer">
-            <small>The credential is submitted only to the configured local API.</small>
+            <small>The credential is submitted only to the configured API.</small>
             <button className="button" type="submit">
-              Verify locally
+              Verify
             </button>
           </div>
         </form>
@@ -558,7 +613,7 @@ function Verification() {
           <h2>Decision</h2>
           {result === null ? (
             <Empty title="Awaiting attestation input">
-              Paste a complete credential to request a deterministic local verification.
+              Paste a complete credential to request a deterministic verification.
             </Empty>
           ) : (
             <StateNotice state={result}>
@@ -600,7 +655,7 @@ function Decision({ result }: { result: VerificationResponse }) {
 function Provenance({ agents }: { agents: ApiState<readonly Agent[]> }) {
   const [selected, setSelected] = useState<string | null>(null);
   const evidence = agents.status === 'ready' ? agents.data : [];
-  // The current local API does not expose a graph route. Do not infer edges from ordered records.
+  // The current API does not expose a graph route. Do not infer edges from ordered records.
   const graph = unavailableGraph();
   const selectedEvidence = evidence.find((agent) => agent.id === selected);
 
@@ -615,7 +670,7 @@ function Provenance({ agents }: { agents: ApiState<readonly Agent[]> }) {
           {agents.status === 'loading' ? (
             <div className="state loading" role="status">
               <span className="spinner" />
-              Loading local evidence…
+              Loading evidence…
             </div>
           ) : agents.status === 'error' ? (
             <div className="state error" role="alert">
@@ -623,7 +678,7 @@ function Provenance({ agents }: { agents: ApiState<readonly Agent[]> }) {
             </div>
           ) : graph === null ? (
             <Empty title="Graph relationships unavailable">
-              This local API does not currently return provenance relationships. No connections are
+              This API does not currently return provenance relationships. No connections are
               inferred from evidence records.
             </Empty>
           ) : (
@@ -643,8 +698,8 @@ function Provenance({ agents }: { agents: ApiState<readonly Agent[]> }) {
             </>
           ) : (
             <p>
-              Choose an evidence record below to inspect its returned local fields. Graph
-              relationships are unavailable from this API.
+              Choose an evidence record below to inspect its returned fields. Graph relationships
+              are unavailable from this API.
             </p>
           )}
         </aside>
@@ -759,6 +814,102 @@ function Unavailable({
     </>
   );
 }
+
+function AuthNotConfigured() {
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <Brand />
+        <h1>Sign-in is not configured</h1>
+        <p>
+          Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable
+          sign-in for this dashboard.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AuthLoading() {
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <Brand />
+        <div className="state loading" role="status">
+          <span className="spinner" />
+          Loading…
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const signInWithEmail = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!supabase) return;
+    setBusy(true);
+    setError(null);
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (authError) setError(authError.message);
+  };
+
+  const signInWithGoogle = async () => {
+    if (!supabase) return;
+    setError(null);
+    const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (authError) setError(authError.message);
+  };
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <Brand />
+        <h1>Sign in</h1>
+        <p className="auth-sub">Authenticate to access the TESSERRA operations dashboard.</p>
+        <form className="auth-form" onSubmit={signInWithEmail}>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+          {error && (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="button" type="submit" disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+        <div className="auth-divider" aria-hidden="true" />
+        <button className="button subtle auth-oauth" onClick={() => void signInWithGoogle()}>
+          Continue with Google
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function formatTime(value: string) {
   const time = new Date(value);
   return Number.isNaN(time.valueOf()) ? value : time.toLocaleString();

@@ -886,3 +886,131 @@ td code {
     grid-template-columns: 1fr;
   }
 }
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.user-chip {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--muted);
+  font:
+    11px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 18px;
+}
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 30px 28px 28px;
+}
+.auth-card .brand {
+  justify-content: flex-start;
+  padding: 0 0 26px;
+}
+.auth-card h1 {
+  margin: 0;
+  font:
+    400 30px Georgia,
+    'Times New Roman',
+    serif;
+  letter-spacing: -0.03em;
+}
+.auth-card p {
+  max-width: 100%;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.auth-card code {
+  display: inline;
+  color: var(--paper);
+  font:
+    12px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.auth-sub {
+  margin-bottom: 20px;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.auth-form label {
+  color: var(--dim);
+  font:
+    11px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.auth-form input {
+  border: 1px solid #454943;
+  background: #111310;
+  padding: 11px 13px;
+  color: #d8d3c9;
+  font:
+    13px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.auth-form input:focus-visible {
+  outline: 2px solid var(--copper-light);
+  outline-offset: 2px;
+}
+.auth-error {
+  margin: 4px 0 0;
+  border-left: 2px solid var(--clay);
+  background: #211715;
+  padding: 9px 11px;
+  color: #d9aca8;
+  font-size: 12px;
+}
+.auth-form .button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px 15px;
+}
+.auth-divider {
+  height: 1px;
+  margin: 20px 0;
+  background: var(--line-soft);
+}
+.auth-oauth {
+  width: 100%;
+  padding: 12px 15px;
+}
+@media (max-width: 640px) {
+  .topbar-actions {
+    gap: 12px;
+  }
+  .user-chip {
+    display: none;
+  }
+}

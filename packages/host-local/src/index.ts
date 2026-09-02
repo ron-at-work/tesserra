@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import {
   createLocalApiServer,
   type EvidenceApi,
-  type LocalApiServer
+  type LocalApiServer,
+  type SupabaseAuthOptions
 } from '@agent-proof/api-server';
 import type { ArtifactBase } from '@agent-proof/protocol';
 import { EncryptedFilesystemKeyProvider, SystemRandomSource } from '@agent-proof/crypto-local';
@@ -40,6 +41,7 @@ export interface LocalHostOptions extends LocalHostDependencies {
   readonly host?: string;
   readonly port?: number;
   readonly trustReloadToken?: string;
+  readonly auth?: SupabaseAuthOptions;
 }
 export interface LocalHost {
   readonly service: IdentityService;
@@ -57,7 +59,8 @@ export function createLocalHost(options: LocalHostOptions): LocalHost {
     ...(options.port === undefined ? {} : { port: options.port }),
     ...(options.trustReloadToken === undefined
       ? {}
-      : { trustReloadToken: options.trustReloadToken })
+      : { trustReloadToken: options.trustReloadToken }),
+    ...(options.auth === undefined ? {} : { auth: options.auth })
   });
   return { service, api, start: () => api.listen(), stop: () => api.close() };
 }
@@ -70,6 +73,7 @@ export interface ConcreteLocalHostOptions {
   readonly host?: string;
   readonly port?: number;
   readonly trustReloadToken?: string;
+  readonly auth?: SupabaseAuthOptions;
   readonly clock?: Clock;
 }
 export interface ConcreteLocalHost extends LocalHost {
@@ -385,7 +389,8 @@ export async function createConcreteLocalHost(
     ...(options.port === undefined ? {} : { port: options.port }),
     ...(options.trustReloadToken === undefined
       ? {}
-      : { trustReloadToken: options.trustReloadToken })
+      : { trustReloadToken: options.trustReloadToken }),
+    ...(options.auth === undefined ? {} : { auth: options.auth })
   });
   let started = false;
   let closed = false;

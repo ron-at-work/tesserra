@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/hosted.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run test --exclude \"**/dist/**\""
   },
