@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@11.25.0",
   "engines": {
-    "node": ">=24.0.0 <25",
+    "node": "24.x",
     "pnpm": ">=11.25.0 <12"
   },
   "scripts": {
