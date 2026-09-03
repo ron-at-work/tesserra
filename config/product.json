@@ -6,6 +6,7 @@
   "links": {
     "repository": "https://github.com/ron-at-work/tesserra",
     "documentation": "https://docs.tesserra.xyz",
+    "app": "https://app.tesserra.xyz",
     "security": "https://github.com/ron-at-work/tesserra/security/policy",
     "issues": "https://github.com/ron-at-work/tesserra/issues"
   },

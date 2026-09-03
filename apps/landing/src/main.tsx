@@ -262,7 +262,7 @@ export function App() {
     ['How', '#how'],
     ['Protocol', '#protocol'],
     ['Security', '#security'],
-    ['Get started', '#get-started']
+    ['Get started', productConfig.links.app]
   ];
 
   return (
