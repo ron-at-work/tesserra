@@ -860,13 +860,6 @@ function SignIn() {
     if (authError) setError(authError.message);
   };
 
-  const signInWithGoogle = async () => {
-    if (!supabase) return;
-    setError(null);
-    const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (authError) setError(authError.message);
-  };
-
   return (
     <div className="auth-screen">
       <div className="auth-card">
@@ -901,10 +894,6 @@ function SignIn() {
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <div className="auth-divider" aria-hidden="true" />
-        <button className="button subtle auth-oauth" onClick={() => void signInWithGoogle()}>
-          Continue with Google
-        </button>
       </div>
     </div>
   );

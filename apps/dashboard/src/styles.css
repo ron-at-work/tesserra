@@ -959,15 +959,6 @@ textarea::placeholder {
   width: 100%;
   padding: 12px 15px;
 }
-.auth-divider {
-  height: 1px;
-  margin: 20px 0;
-  background: var(--border-soft);
-}
-.auth-oauth {
-  width: 100%;
-  padding: 12px 15px;
-}
 @media (max-width: 640px) {
   .topbar-actions {
     gap: 12px;

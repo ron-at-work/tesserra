@@ -15,10 +15,6 @@ vi.mock('../src/supabase', () => {
       getSession: async () => ({ data: { session }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
       signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
-      signInWithOAuth: async () => ({
-        data: { url: 'https://example/oauth', provider: 'google' },
-        error: null
-      }),
       signOut: async () => ({ error: null })
     }
   } as unknown as SupabaseClient;
