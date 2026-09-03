@@ -5,7 +5,7 @@
   "commandName": "agentctl",
   "links": {
     "repository": "https://github.com/ron-at-work/tesserra",
-    "documentation": "https://tesserra-docs.vercel.app",
+    "documentation": "https://docs.tesserra.xyz",
     "security": "https://github.com/ron-at-work/tesserra/security/policy",
     "issues": "https://github.com/ron-at-work/tesserra/issues"
   },
