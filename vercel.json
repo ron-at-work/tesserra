@@ -1,4 +1,0 @@
-{
-  "buildCommand": "pnpm --filter @agent-proof/landing build",
-  "outputDirectory": "apps/landing/dist"
-}
