@@ -12,8 +12,8 @@
   "visualTokens": {
     "color": {
       "accent": "#b97955",
-      "background": "#f3f0e8",
-      "foreground": "#171914"
+      "background": "#080808",
+      "foreground": "#ffffff"
     }
   }
 }

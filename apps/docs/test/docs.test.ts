@@ -15,13 +15,13 @@ describe('documentation website', () => {
     expect(source).toContain('aria-label="On this page"');
   });
 
-  it('uses responsive, reduced-motion, and shared palette semantics', () => {
+  it('uses responsive, reduced-motion, and shared dark palette semantics', () => {
     expect(styles).toContain('@media (max-width: 760px)');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     expect(styles).toContain('.drawer');
-    expect(styles).toContain('--charcoal: #10110f;');
-    expect(styles).toContain('--paper: #f3f0e8;');
-    expect(styles).toContain('--moss: #3f594c;');
+    expect(styles).toContain('--bg: #080808;');
+    expect(styles).toContain('--paper: #ede6d6;');
+    expect(styles).toContain('--mint: #50c881;');
     expect(styles).toContain('--copper: #b97955;');
     expect(styles).toContain('--clay: #bc7169;');
   });

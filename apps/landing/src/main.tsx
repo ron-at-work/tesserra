@@ -96,6 +96,27 @@ Capability: repository.read
 Resource:   github://acme/payments-api
 Signature:  ✓ verified`;
 
+function renderMint(value: string): ReactNode[] {
+  return value.split('\n').map((line, index) => {
+    const check = line.indexOf('✓');
+    if (check === -1) {
+      return (
+        <span key={index}>
+          {line}
+          {'\n'}
+        </span>
+      );
+    }
+    return (
+      <span key={index}>
+        {line.slice(0, check)}
+        <span className="ok">{line.slice(check)}</span>
+        {'\n'}
+      </span>
+    );
+  });
+}
+
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
@@ -108,7 +129,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
     }
   }
   return (
-    <button className="copy" onClick={copy} aria-label={`Copy ${label}`}>
+    <button className="copy-btn" onClick={copy} aria-label={`Copy ${label}`}>
       {copied ? 'COPIED' : 'COPY'}
     </button>
   );
@@ -140,36 +161,49 @@ function ProvenanceGraph() {
     { key: 'tool', kind: 'TOOL BOUNDARY', label: 'MCP TOOL' },
     { key: 'resource', kind: 'AUDIENCE', label: 'AWS / DB' }
   ];
-  const edges = ['authorization', 'delegation', 'request', 'verification'];
+  const edges: Array<{ key: string; label: string }> = [
+    { key: 'authorization', label: 'authorized' },
+    { key: 'delegation', label: 'delegated' },
+    { key: 'request', label: 'requested' },
+    { key: 'verification', label: 'verified' }
+  ];
   return (
     <div className="provenance" aria-label="Interactive provenance chain from human to resource">
-      <p className="visual-label">PROVENANCE / TAP OR CLICK TO INSPECT</p>
-      <div className="chain">
-        {nodes.map((node, index) => (
-          <div className="chain-part" key={node.key}>
-            <button className="graph-node" onClick={() => setSelected(details[node.key])}>
-              <small>{node.kind}</small>
-              <strong>{node.label}</strong>
-            </button>
-            {index < edges.length ? (
-              <div className="graph-edge">
-                <span aria-hidden="true" />
-                <button onClick={() => setSelected(details[edges[index]])}>
-                  {['authorized', 'delegated', 'requested', 'verified'][index]}
+      <div className="provenance-header">
+        <span>PROVENANCE · TAP OR CLICK TO INSPECT</span>
+        <span className="status">VERIFIED</span>
+      </div>
+      <div className="provenance-body">
+        <div className="chain">
+          {nodes.map((node, index) => (
+            <div key={node.key}>
+              <div className="chain-node">
+                <button
+                  className="chain-node-btn"
+                  data-component-id={`node-${node.key}`}
+                  onClick={() => setSelected(details[node.key])}
+                >
+                  <small>{node.kind}</small>
+                  <strong>{node.label}</strong>
                 </button>
               </div>
-            ) : null}
+              {index < edges.length ? (
+                <div className="chain-edge">
+                  <button onClick={() => setSelected(details[edges[index].key])}>
+                    {edges[index].label}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        <aside className="detail-card" aria-live="polite">
+          <div className="detail-card-head">
+            <span className="title">{selected.title}</span>
+            <span className="badge">{selected.status ?? 'VERIFIED'}</span>
           </div>
-        ))}
-      </div>
-      <aside className="detail-card" aria-live="polite">
-        <header>
-          <span>{selected.title}</span>
-          <span className="verified-status">{selected.status ?? 'VERIFIED'}</span>
-        </header>
-        <div className="detail-body">
-          <p className="uri">{selected.uri}</p>
-          <dl>
+          <p className="detail-uri">{selected.uri}</p>
+          <dl className="detail-dl">
             <div>
               <dt>Actor</dt>
               <dd>{selected.actor}</dd>
@@ -191,32 +225,15 @@ function ProvenanceGraph() {
               <dd>signature + bindings</dd>
             </div>
           </dl>
-          <p className="verified-line">signature verified</p>
-        </div>
-      </aside>
-      <div className="legend">
-        <span>delegation</span>
-        <span>verified</span>
+          <p className="detail-verified">signature verified</p>
+        </aside>
       </div>
     </div>
   );
 }
 
 export function App() {
-  const [compact, setCompact] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [terminalReady, setTerminalReady] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 40);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    const timer = window.setTimeout(() => setTerminalReady(true), 320);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.clearTimeout(timer);
-    };
-  }, []);
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -250,10 +267,11 @@ export function App() {
 
   return (
     <>
-      <nav className={`nav ${compact ? 'is-compact' : ''}`} aria-label="Primary navigation">
-        <div className="wrap nav-inner">
+      <nav className="nav" aria-label="Primary navigation">
+        <div className="nav-inner">
           <a className="brand" href="#top" aria-label={`${productConfig.displayName} home`}>
             <LogoMark />
+            <span className="brand-dot" />
             {productConfig.displayName}
           </a>
           <div className="nav-links">
@@ -264,7 +282,7 @@ export function App() {
             ))}
           </div>
           <a className="nav-cta" href={productConfig.links.documentation}>
-            DOCS ↗
+            DOCS →
           </a>
           <button
             className="menu-button"
@@ -288,7 +306,10 @@ export function App() {
       <main id="top">
         <header className="hero">
           <div className="wrap">
-            <p className="eyebrow">OPEN SOURCE · AGENT IDENTITY · DELEGATION</p>
+            <p className="eyebrow">
+              <span className="dot" />
+              OPEN SOURCE · AGENT IDENTITY · DELEGATION
+            </p>
             <div className="hero-grid">
               <div>
                 <h1>
@@ -301,10 +322,10 @@ export function App() {
                   infrastructure for autonomous software agents.
                 </p>
                 <div className="actions">
-                  <a className="button primary" href={productConfig.links.repository}>
-                    View on GitHub ↗
+                  <a className="btn btn-primary" href={productConfig.links.repository}>
+                    View on GitHub →
                   </a>
-                  <a className="button" href="#protocol">
+                  <a className="btn btn-ghost" href="#protocol">
                     Read the protocol →
                   </a>
                 </div>
@@ -325,11 +346,11 @@ export function App() {
                 services, the receiving system needs more than a username or API key.
               </p>
               <ul className="questions">
-                <li>Who was it?</li>
-                <li>Who authorized it?</li>
-                <li>What could it do?</li>
-                <li>Who delegated that authority?</li>
-                <li>Was it still valid?</li>
+                <li data-num="01">Who was it?</li>
+                <li data-num="02">Who authorized it?</li>
+                <li data-num="03">What could it do?</li>
+                <li data-num="04">Who delegated that authority?</li>
+                <li data-num="05">Was it still valid?</li>
               </ul>
             </div>
             <div className="unknown">
@@ -339,12 +360,12 @@ export function App() {
                 <span>Automation</span>
               </div>
               <div className="unknown-flow">
-                <div>
+                <div className="agent-box">
                   AGENT
                   <br />
                   REQUEST
                 </div>
-                <b>?</b>
+                <span className="question">?</span>
                 <div className="destinations">
                   <span>Code host</span>
                   <span>Cloud API</span>
@@ -395,7 +416,7 @@ export function App() {
           </Reveal>
         </section>
 
-        <section>
+        <section className="paper-section">
           <Reveal className="wrap">
             <p className="kicker">03 / PROVENANCE</p>
             <h2>
@@ -483,7 +504,7 @@ export function App() {
           </Reveal>
         </section>
 
-        <section id="protocol" className="protocol-section">
+        <section id="protocol" className="paper-section">
           <Reveal className="wrap protocol-shell">
             <aside className="spec-index">
               <strong>SPEC</strong>
@@ -515,7 +536,7 @@ export function App() {
                 )}
               </div>
               <a className="spec-link" href={productConfig.links.documentation}>
-                Read the specification ↗
+                Read the specification →
               </a>
             </div>
           </Reveal>
@@ -532,11 +553,11 @@ export function App() {
               </p>
             </div>
             <div className="code-block">
-              <header>
+              <div className="code-block-header">
                 <span>SIGNED TOOL REQUEST</span>
                 <CopyButton value={signedRequest} label="signed tool request" />
-              </header>
-              <pre>{signedRequest}</pre>
+              </div>
+              <pre>{renderMint(signedRequest)}</pre>
             </div>
           </Reveal>
         </section>
@@ -587,12 +608,12 @@ export function App() {
                 relying on an LLM or cloud service.
               </p>
             </div>
-            <div className={`code-block terminal ${terminalReady ? 'terminal-ready' : ''}`}>
-              <header>
+            <div className="code-block terminal">
+              <div className="code-block-header">
                 <span>TERMINAL / {productConfig.commandName.toUpperCase()}</span>
                 <CopyButton value={cli} label="terminal commands" />
-              </header>
-              <pre>{cli}</pre>
+              </div>
+              <pre>{renderMint(cli)}</pre>
             </div>
           </Reveal>
         </section>
@@ -607,11 +628,11 @@ export function App() {
                 open.
               </p>
               <div className="actions">
-                <a className="button" href={productConfig.links.repository}>
-                  Read the source ↗
+                <a className="btn btn-ghost" href={productConfig.links.repository}>
+                  Read the source →
                 </a>
-                <a className="button" href={productConfig.links.documentation}>
-                  Read the docs ↗
+                <a className="btn btn-ghost" href={productConfig.links.documentation}>
+                  Read the docs →
                 </a>
               </div>
             </div>
@@ -661,12 +682,12 @@ export function App() {
                 boundaries.
               </p>
             </div>
-            <div className="actions">
-              <a className="button primary" href={productConfig.links.repository}>
-                GitHub ↗
+            <div className="actions" style={{ margin: 0 }}>
+              <a className="btn btn-primary" href={productConfig.links.repository}>
+                GitHub →
               </a>
-              <a className="button" href={productConfig.links.documentation}>
-                Read the protocol ↗
+              <a className="btn btn-ghost" href={productConfig.links.documentation}>
+                Read the protocol →
               </a>
             </div>
           </Reveal>
@@ -685,7 +706,7 @@ export function App() {
           </a>
         </span>
         <span>LOCAL-FIRST · PROTOCOL-ORIENTED</span>
-        <a href={productConfig.links.security}>SECURITY ↗</a>
+        <a href={productConfig.links.security}>SECURITY →</a>
       </footer>
     </>
   );

@@ -83,13 +83,13 @@ describe('dashboard', () => {
     expect(screen.getByText('Selected evidence')).toBeTruthy();
   });
 
-  it('uses the shared accessible editorial palette and a readable compact type floor', () => {
-    expect(styles).toContain('--ink: #111310;');
-    expect(styles).toContain('--paper: #e8e3d9;');
-    expect(styles).toContain('--moss: #82a78a;');
+  it('uses the shared accessible dark palette and a readable compact type floor', () => {
+    expect(styles).toContain('--bg: #080808;');
+    expect(styles).toContain('--paper: #ede6d6;');
+    expect(styles).toContain('--mint: #50c881;');
     expect(styles).toContain('--copper: #b97955;');
-    expect(styles).toContain('--clay: #bb6f68;');
-    expect(styles).toContain('--dim: #8a8d85;');
+    expect(styles).toContain('--clay: #bc7169;');
+    expect(styles).toContain('--text-muted: #787878;');
     expect(styles).not.toMatch(/font:\s*(?:\d+\s+)?(?:8|9|10)px|font-size:\s*(?:8|9|10)px/);
   });
 
