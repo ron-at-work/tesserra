@@ -1,6 +1,6 @@
 # Local data architecture
 
-**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 
 SQLite is the default local persistence implementation. It is a storage adapter behind ports, not a source of trust semantics. Foreign keys are enabled; writes that affect authority, status, or replay occur in transactions. Application-layer authorization is still required: filesystem access to a local database is not authorization.
 

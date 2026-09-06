@@ -4,10 +4,10 @@ This directory records the implementation architecture selected for TESSERRA Mil
 
 ## Status vocabulary
 
-- **Accepted for documentation** — selected as the planning baseline and recorded here. It authorizes no code.
-- **Proposed pending RFC review** — requires protocol RFC, threat-model, standards-gap, and explicit Milestone 1 approval review before implementation.
+- **Accepted for documentation** — selected as the planning baseline and recorded here. It authorizes no code by itself.
+- **Accepted — Milestone 1 approved for implementation** — U-01 through U-12 are Complete; Phase 1 implementation is unlocked under the freeze and amendment rules in the [implementation-unlock checklist](../milestone-1-review-checklist.md).
 
-Every ADR below has both statuses because this milestone is documentation-only. Where they differ, the individual ADR identifies the item that remains proposed.
+Every ADR below carries the post-U-12 accepted status. Wire bytes, trust semantics, decision precedence, and declared adapter status remain frozen; changes still require an RFC amendment and renewed review for the affected scope.
 
 ## ADR index
 

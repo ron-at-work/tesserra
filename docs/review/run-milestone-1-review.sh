@@ -3,7 +3,7 @@
 # Usage: bash docs/review/run-milestone-1-review.sh [milestone-commit-or-base-ref]
 set -euo pipefail
 
-readonly MILESTONE_REF="${1:-ae22dea}"
+readonly MILESTONE_REF="${1:-82413a7}"
 readonly ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 
 if [[ -z "$ROOT" ]]; then
@@ -72,7 +72,7 @@ required_files=(
   docs/milestone-1-review-checklist.md
   docs/review/README.md
   docs/review/run-milestone-1-review.sh
-  docs/rfcs/0001-tesserra-v1-wire-protocol.md
+  docs/rfcs/0001-attest-v1-wire-protocol.md
   docs/security/threat-model.md
   docs/architecture/data-architecture.md
   docs/architecture/milestone-one-gate.md

@@ -1,7 +1,7 @@
 # TESSERRA — Project Context
 
 > Handoff context for anyone (developer, agent, or reviewer) picking up this repository.
-> Last updated: 2026-09-02.
+> Last updated: 2026-09-06.
 
 ## 1. What this is
 
@@ -58,11 +58,11 @@ tests/conformance/ frozen positive/negative verification vectors
 
 | Branch | Purpose | Status |
 |---|---|---|
-| `vorflux/tesserra-product` | **Current.** TESSERRA rename + logo. | HEAD, tested (lint/build/typecheck/test pass) |
-| `main` (`origin/main`) | Previous direct-push line (still shows "ATTEST"). | Behind the rename |
-| `vorflux/docs-and-visual-redesign` | Docs site + landing/dashboard redesign. | Merged into history |
-| `vorflux/attest-product` | Earlier implementation line (old name). | Superseded |
-| `vorflux/attest-rfc-plan` | Milestone-1 plan branch. | Superseded |
+| `main` (`origin/main`) | **Current.** TESSERRA product line (rename, logo, apps, Phase 1+). | HEAD; tracks `origin/main` |
+| `origin/vorflux/tesserra-product` | Historical rename branch tip. | Same tip as `main` at last sync |
+| Earlier `vorflux/*` / ATTEST lines | Docs redesign and pre-rename implementation. | Superseded / merged into history |
+
+Milestone 1 frozen evidence commit: `82413a7` (`docs: define agent proof v1 protocol gate`). Verify with `bash docs/review/run-milestone-1-review.sh`.
 
 ## 4. Build, test, run
 

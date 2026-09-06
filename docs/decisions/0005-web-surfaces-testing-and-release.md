@@ -1,6 +1,6 @@
 # ADR 0005: Separate web surfaces, testing/conformance, benchmarks, release, and compatibility
 
-**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 **Date:** 2026-09-01
 
 ## Context

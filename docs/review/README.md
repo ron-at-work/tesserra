@@ -7,10 +7,12 @@ This directory contains a dependency-free integrity guard for the approved TESSE
 From the repository root:
 
 ```sh
-bash docs/review/run-milestone-1-review.sh ae22dea
+bash docs/review/run-milestone-1-review.sh
 ```
 
-`ae22dea` is the recorded Milestone 1 evidence commit. It may be replaced only with an immutable review revision that has completed the required traceability, security, independent-reproduction, and approval process. The script archives that exact commit to a temporary directory, so uncommitted changes and later Phase 1 packages cannot alter its result.
+Omit the argument to use the recorded Milestone 1 evidence commit `82413a7` (`docs: define agent proof v1 protocol gate`; full hash `82413a7f8945dadd2d6acf06743064bb10c9d7d0`). Pass an explicit commit only when verifying a different immutable review revision that has completed the required traceability, security, independent-reproduction, and approval process. The script archives that exact commit to a temporary directory, so uncommitted changes and later Phase 1 packages cannot alter its result.
+
+The frozen evidence snapshot records the RFC at its historical path `docs/rfcs/0001-attest-v1-wire-protocol.md`. The later working-tree rename to `0001-tesserra-v1-wire-protocol.md` is display/product hygiene and is intentionally **not** the Milestone 1 evidence tip.
 
 The script needs Bash 4+, Git, `tar`, `sort`, `mktemp`, and `python3`; it adds no package or runtime dependency.
 

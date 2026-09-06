@@ -1,6 +1,6 @@
 # Future public surfaces by phase
 
-**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 
 The public API is loopback-only by default. It binds to an explicit local endpoint, rejects non-loopback binding unless an operator deliberately enables remote exposure, and documents the exposure authentication, TLS, firewall, origin, and threat-model requirements before enabling it. No implementation should describe a local binding as safe in a hostile local-user environment.
 

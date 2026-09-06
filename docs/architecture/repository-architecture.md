@@ -1,6 +1,6 @@
 # Future repository architecture
 
-**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 
 This is the target shape after the documentation-only gate. It is not a workspace scaffold and creates no implementation authorization.
 

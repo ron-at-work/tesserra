@@ -1,6 +1,6 @@
 # ADR 0001: Node, TypeScript, ESM, and package boundaries
 
-**Status:** Accepted for documentation; proposed pending RFC review and Milestone 1 implementation approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 **Date:** 2026-09-01
 
 ## Context

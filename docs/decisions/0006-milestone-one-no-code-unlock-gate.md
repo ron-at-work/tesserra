@@ -1,6 +1,6 @@
 # ADR 0006: Documentation-only Milestone 1 gate
 
-**Status:** Accepted for documentation; proposed pending RFC review and explicit user approval.
+**Status:** Accepted — Milestone 1 approved for implementation (U-12, 2026-09-01).
 **Date:** 2026-09-01
 
 ## Context
