@@ -25,7 +25,7 @@ describe('public landing page', () => {
 
   it('has touch and reduced-motion accommodations', () => {
     expect(styles).toContain('@media (max-width: 620px)');
-    expect(styles).toMatch(/\.nav-links,\s*\.nav-cta\s*\{\s*display:\s*none;\s*\}/);
+    expect(styles).toMatch(/\.nav-links,\s*\.nav-cta,\s*\.nav-actions\s*\{\s*display:\s*none;\s*\}/);
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     expect(styles).toMatch(/\.reveal\s*\{\s*opacity:\s*1;\s*transform:\s*none;\s*\}/);
   });

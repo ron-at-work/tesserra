@@ -181,16 +181,31 @@ input:focus-visible {
   font: 600 12px var(--mono);
 }
 .repo-link {
-  display: grid;
-  width: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   height: 32px;
-  place-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  font-size: 18px;
+  font: 500 12px var(--sans);
+  color: var(--text-muted);
   text-decoration: none;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
+
+.repo-link svg {
+  width: 14px;
+  height: 14px;
+}
+
 .repo-link:hover {
   color: var(--copper-light);
+  border-color: rgba(185, 121, 85, 0.55);
+  background: rgba(185, 121, 85, 0.08);
 }
 .menu-button {
   display: none;

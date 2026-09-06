@@ -49,6 +49,22 @@ export const pages: readonly DocumentPage[] = [
         ]
       },
       {
+        title: 'Start here',
+        body: [
+          'Use the Quick start page for a local install and fixture verification walkthrough. Then read RFC 0001 for wire semantics, the CLI/SDK/local API pages for interfaces, and the roadmap for phase status.'
+        ],
+        table: {
+          headings: ['Path', 'What you get'],
+          rows: [
+            ['Quick start', 'Pinned Node/pnpm install, fixture identity/trust, and frozen request verification.'],
+            ['RFC 0001', 'Normative objects, canonical bytes, and ordered verification.'],
+            ['CLI / SDK / Local API', 'Current command, library, and loopback HTTP surfaces.'],
+            ['Adapters', 'MCP, SPIFFE, and A2A boundary helpers that do not replace those protocols.'],
+            ['Roadmap / Release', 'Phase status and the no-published-distribution boundary.']
+          ]
+        }
+      },
+      {
         title: 'Status terms',
         body: [
           'Status is intentionally specific so a reference does not imply a released operational surface.'
@@ -162,7 +178,23 @@ proof:       AGENT-PROOF-SIGN-V1\\0 || kind || \\0 || JCS(semantic)`
         title: 'Versioned artifacts',
         body: [
           'Schemas are versioned protocol artifacts. They constrain document structure; the RFC remains the normative source for canonical bytes, semantic checks, and ordered decisions.',
-          'The current schema set includes artifact, case-envelope, common, trust-snapshot, and verification schemas.'
+          'The signed/wire namespace is agent-proof/v1. TESSERRA is a display name only and MUST NOT appear in signed or wire values.'
+        ],
+        table: {
+          headings: ['Schema', 'Role'],
+          rows: [
+            ['artifacts.schema.json', 'Identity, delegation, request, and related artifact shapes.'],
+            ['case-envelope.schema.json', 'Conformance case packaging for frozen vectors.'],
+            ['common.schema.json', 'Shared primitives used across artifacts.'],
+            ['trust-snapshot.schema.json', 'Pinned local trust/policy snapshot document.'],
+            ['verification.schema.json', 'Deterministic verification result shape.']
+          ]
+        }
+      },
+      {
+        title: 'What schemas do not decide',
+        body: [
+          'Schema validation does not replace BOM-free UTF-8 parsing, RFC 8785 JCS canonicalization, Ed25519 verification, local trust pinning, or the ordered decision pipeline in RFC 0001.'
         ]
       }
     ]
@@ -191,6 +223,13 @@ proof:       AGENT-PROOF-SIGN-V1\\0 || kind || \\0 || JCS(semantic)`
         body: [
           'Offline verification cannot establish globally current revocation or globally one-time replay prevention. External identity, authorization, workload, transport, and policy systems retain their own semantics.'
         ]
+      },
+      {
+        title: 'Threat classes covered',
+        body: [
+          'The model covers parser and canonicalization differentials, algorithm or key confusion, chain splicing, nonce races, status rollback, clock manipulation, adapter stripping, denial of service, and privacy or linkability risks.',
+          'Status remains Draft until the named security review acceptance for the MVP profile is complete.'
+        ]
       }
     ]
   },
@@ -210,7 +249,32 @@ proof:       AGENT-PROOF-SIGN-V1\\0 || kind || \\0 || JCS(semantic)`
         title: 'Attenuation is a verifier property',
         body: [
           'A child delegation must be a strict subset of its parent and root authority ceiling across capability, resource, task, audience, validity, and remaining depth.',
-          'The verifier rejects expansion, cycles, duplicate IDs, ambiguous or missing parents, mixed trust roots, and invalid intermediates.'
+          'The verifier rejects expansion, cycles, duplicate IDs, ambiguous or missing parents, mixed trust roots, and invalid intermediates. Omission grants no authority.'
+        ]
+      },
+      {
+        title: 'Local CLI workflow',
+        body: [
+          'The CLI can create and inspect a locally signed delegation, sign a locally stored request, and verify complete root/delegation/request evidence. This uses the local encrypted key provider and SQLite artifacts; it is not a remote authorization service.'
+        ],
+        code: `agentctl delegate create --identity "$PARENT_ID" \\
+  --delegate agid:v1:example.test/delegate --capability files.read --json
+agentctl request sign --identity "$DELEGATE_ID" --delegation "$DELEGATION_ID" \\
+  --action files.read --json
+agentctl request verify --id "$REQUEST_ID" --json`
+      },
+      {
+        title: 'API and SDK scope',
+        body: [
+          'The loopback API can persist supplied, already-signed delegations and verify supplied evidence against its pinned trust snapshot. It does not sign a delegation or request for a caller.',
+          'The SDK exposes deterministic verifyDelegation and verifyRequest. Callers supply complete artifacts, trust snapshot, and expected context.'
+        ]
+      },
+      {
+        title: 'Lifecycle limits',
+        body: [
+          'identity rotate fails with LIFECYCLE_UNAVAILABLE until atomic key-binding and key-status history exist.',
+          'revoke fails with STATUS_AUTHORITY_REQUIRED in the local fixture profile. revoked reports locally stored signed revocation records only and is not an online global status check.'
         ]
       }
     ]
@@ -277,6 +341,12 @@ agentctl provenance export [--id <artifact-id>] --output <file>`
 
 const identityResult = verifyIdentity({ credential, trustSnapshot });
 const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayMode: 'offline' });`
+      },
+      {
+        title: 'Boundary',
+        body: [
+          'The SDK is a programmatic facade over offline verification and the typed local API client. It does not host crypto internals, SQLite storage, or remote lifecycle services.'
+        ]
       }
     ]
   },
@@ -293,7 +363,34 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
       {
         title: 'Local-first boundary',
         body: [
-          'The local API documents served routes and typed error behavior. Remote exposure, lifecycle management, and incomplete surfaces are not implied by the local client boundary.'
+          'The local API is versioned at /v1 and loopback-only by default. It returns a stable error envelope with code, diagnostic message, details, and requestId. Clients must branch on code. Private key material is never exposed.'
+        ]
+      },
+      {
+        title: 'Served routes',
+        body: ['Current route surface and status.'],
+        table: {
+          headings: ['Method and path', 'Status'],
+          rows: [
+            ['POST /v1/identities', 'Implemented'],
+            ['GET /v1/identities/{id}', 'Implemented'],
+            ['POST /v1/verifications/identity', 'Implemented'],
+            ['GET /v1/agents', 'Implemented'],
+            ['GET /v1/trust-anchors', 'Implemented'],
+            ['POST /v1/trust-snapshots:reload', 'Implemented; local authorization required'],
+            ['POST /v1/verifications/delegation', 'Implemented'],
+            ['POST /v1/verifications/request', 'Implemented'],
+            ['POST|GET /v1/delegations', 'Implemented when evidence persistence is configured'],
+            ['GET /v1/revocations/{id}', 'Implemented when evidence persistence is configured'],
+            ['GET /v1/events', 'Implemented when evidence persistence is configured']
+          ]
+        }
+      },
+      {
+        title: 'Unserved surfaces',
+        body: [
+          'POST /v1/revocations returns STATUS_AUTHORITY_REQUIRED until a distinct status publisher is configured.',
+          'There is no identity rotation route, no request-signing route, and no /v1/provenance graph or export route. Remote exposure requires explicit authentication, TLS, and threat-model review.'
         ]
       }
     ]
@@ -315,6 +412,13 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
           'Complete normal MCP and OAuth authorization first. The adapter then derives exact local bindings and verifies the optional project proof if endpoint policy requires it.',
           'It does not replace OAuth access tokens, discover trust from MCP metadata, or claim arbitrary client or transport compatibility.'
         ]
+      },
+      {
+        title: 'Carrier and outcomes',
+        body: [
+          'The project metadata key is io.agent-proof/proof. Its value is a base64url-encoded canonical agent-proof-mcp/v1 carrier. This is project-defined metadata, not an MCP standard field.',
+          'Receiver outcomes include missing, stripped, malformed, oversized, and denied. Local policy decides whether an MCP call lacking verified evidence is rejected; these outcomes never replace the MCP protocol result.'
+        ]
       }
     ]
   },
@@ -335,6 +439,12 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
           'The adapter selects configured, trusted X.509-SVID material for channel identity and returns a workload principal plus runtime observation.',
           'It does not implement Workload API, validation, bundle distribution, node attestation, federation, or map a SPIFFE ID to logical agent authority, task, or delegation.'
         ]
+      },
+      {
+        title: 'Hard non-equivalence',
+        body: [
+          'A spiffe://trust-domain/workload identifier is not a logical agent ID, OAuth client ID, human or service authority, or model identity. SPIFFE remains authoritative for workload attestation; Agent Proof records a typed runtime-evidence reference only.'
+        ]
       }
     ]
   },
@@ -354,6 +464,12 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
         body: [
           'A sender emits the project proof only after a peer explicitly negotiates the extension. Receivers recompute exact parsed-message and task bindings before verification.',
           'Unsupported peers have an explicit outcome; ordinary A2A task success is not treated as verified evidence.'
+        ]
+      },
+      {
+        title: 'What the adapter does not do',
+        body: [
+          'It does not implement A2A, replace HTTP/OAuth/mTLS security schemes, or treat an Agent Card as live task authorization. Proof travels as a negotiated extension carrier separate from A2A task semantics.'
         ]
       }
     ]
@@ -376,6 +492,25 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
           'Phase 1 is implemented. Phases 2 through 10, including the Phase 9 local operations dashboard, remain partial and retain their documented gates.',
           'Status describes this repository branch, not standards endorsement or a release-date commitment.'
         ]
+      },
+      {
+        title: 'Phase table',
+        body: ['Phase outcomes and status vocabulary from the repository roadmap.'],
+        table: {
+          headings: ['Phase', 'Outcome', 'Status'],
+          rows: [
+            ['1', 'Identity, local trust, offline verification', 'Implemented'],
+            ['2', 'Delegation and attenuation', 'Partial'],
+            ['3', 'Signed requests and replay', 'Partial'],
+            ['4', 'Revocation and rotation lifecycle', 'Partial'],
+            ['5', 'Verification events and provenance', 'Partial'],
+            ['6', 'MCP adapter', 'Partial'],
+            ['7', 'SPIFFE/SPIRE adapter', 'Partial'],
+            ['8', 'A2A adapter', 'Partial'],
+            ['9', 'Local operations dashboard', 'Partial'],
+            ['10', 'Landing, docs site, release completion', 'Partial']
+          ]
+        }
       },
       {
         title: 'Read partial precisely',
@@ -401,6 +536,24 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
         body: [
           'Adapters and transports call the same core verifier; web applications do not host crypto or storage internals. The architecture records package and operational boundaries rather than collapsing protocol roles.'
         ]
+      },
+      {
+        title: 'Package graph',
+        body: [
+          'Internal package scope and domain types are independent of the TESSERRA display name. Node 24, pnpm, strict TypeScript, and ESM are the runtime baseline.'
+        ],
+        table: {
+          headings: ['Package', 'Role'],
+          rows: [
+            ['protocol', 'Schemas, canonicalization, wire types, vectors'],
+            ['core', 'Pure deterministic verifier'],
+            ['crypto-local / storage-sqlite', 'Local keys and SQLite persistence'],
+            ['api-contract / api-client / api-server', 'Typed loopback HTTP boundary'],
+            ['sdk / cli / host-local', 'Programmatic and operator surfaces'],
+            ['adapter-*', 'Optional MCP, SPIFFE, A2A boundaries'],
+            ['apps/*', 'Dashboard, landing, and docs sites']
+          ]
+        }
       }
     ]
   },
@@ -419,6 +572,25 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
         title: 'Use and non-use',
         body: [
           'The research register distinguishes reuse, mapping, avoided reimplementation, and project-defined gaps. A draft is not called a standard, and adapter boundaries do not claim replacement or endorsement.'
+        ]
+      },
+      {
+        title: 'Disposition legend',
+        body: ['How related systems are treated at the boundary.'],
+        table: {
+          headings: ['Disposition', 'Meaning'],
+          rows: [
+            ['Reuse', 'Cited system remains authoritative for that capability.'],
+            ['Map/profile', 'Preserve a typed reference without identity equivalence.'],
+            ['Avoid reimplementation', 'Function is explicitly out of core scope.'],
+            ['Define in TESSERRA', 'Project-specific semantic; a proposal, not a standard.']
+          ]
+        }
+      },
+      {
+        title: 'Hard non-equivalence',
+        body: [
+          'SPIFFE IDs, OAuth/OIDC claims, A2A Agent Cards, and model labels retain their own meanings. A signature validates bytes under local policy; it does not prove honesty, consent, or safe execution.'
         ]
       }
     ]
@@ -439,6 +611,122 @@ const requestResult = verifyRequest({ artifacts, trustSnapshot, context, replayM
         title: 'Decision record index',
         body: [
           'The decision set freezes the relevant architecture choices at their approved scope and records why each choice was made. Wire semantics remain governed by the RFC and amendment process.'
+        ],
+        table: {
+          headings: ['ADR', 'Decision'],
+          rows: [
+            ['0001', 'Node 24, pnpm, strict TypeScript, ESM, one-way package boundaries'],
+            ['0002', 'Schema ownership, canonical wire bytes, deterministic core ports'],
+            ['0003', 'Encrypted local keys, SQLite, migrations, retention'],
+            ['0004', 'Loopback typed API, OpenAPI, CLI/SDK, adapters'],
+            ['0005', 'Separate web surfaces, quality, release, compatibility'],
+            ['0006', 'Documentation-only gate and implementation unlock']
+          ]
+        }
+      },
+      {
+        title: 'Non-goals',
+        body: [
+          'These decisions do not replace SPIFFE/SPIRE, OAuth/OIDC, MCP, A2A, PKI, an authorization server, a policy engine, or a generic agent framework.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'examples',
+    group: 'Build',
+    title: 'Examples',
+    eyebrow: 'Runnable boundaries',
+    summary:
+      'Bounded examples that exercise current behavior without expanding roadmap status into production recipes.',
+    status: 'Implemented',
+    source: 'examples/README.md',
+    searchable: 'examples delegated request mcp spiffe a2a conformance positive two-hop',
+    sections: [
+      {
+        title: 'What examples are for',
+        body: [
+          'Examples exercise bounded, current behavior. They are not production deployment recipes and do not expand the implementation status described in the roadmap.'
+        ],
+        table: {
+          headings: ['Example', 'Focus'],
+          rows: [
+            ['delegated-request', 'Verify frozen positive two-hop delegation/request evidence'],
+            ['mcp', 'Inspect the scoped MCP proof-propagation helper'],
+            ['spiffe', 'Inspect the workload-identity mapping boundary'],
+            ['a2a', 'Inspect the negotiated A2A extension boundary']
+          ]
+        }
+      },
+      {
+        title: 'Related walkthroughs',
+        body: [
+          'For the runnable local identity/trust walkthrough, use Quick start. For CLI, SDK, and loopback API behavior, use the Build reference pages.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'benchmarking',
+    group: 'Project',
+    title: 'Benchmarking',
+    eyebrow: 'Measured-only policy',
+    summary:
+      'How to measure real verification of the checked-in positive two-hop fixture without inventing capacity claims.',
+    status: 'Implemented',
+    source: 'docs/guides/benchmarking.md',
+    searchable: 'benchmark warmup iterations positive-two-hop ops per second measured only',
+    sections: [
+      {
+        title: 'What is measured',
+        body: [
+          'pnpm benchmark measures one real operation: verification of the checked-in positive-two-hop.json delegated request. It loads the built core package, warms it, repeats verification, and fails if the fixture is not valid.'
+        ],
+        code: `corepack pnpm build
+BENCHMARK_WARMUP=100 BENCHMARK_ITERATIONS=1000 corepack pnpm benchmark`
+      },
+      {
+        title: 'Reporting rules',
+        body: [
+          'Do not compare results across machines or publish capacity or security claims without documenting CPU, OS, Node/pnpm versions, commit, fixture shape, configuration, sample policy, and raw data.',
+          'Future measurements for rotation, status lookup, provenance reconstruction, and adapter overhead are blocked until those operations are implemented.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'release',
+    group: 'Project',
+    title: 'Release status',
+    eyebrow: 'Distribution boundary',
+    summary:
+      'Current public release status, candidate gate commands, and planned supply-chain artifacts.',
+    status: 'Partial',
+    source: 'docs/release.md',
+    searchable: 'release package distribution sbom attestation sha256sums candidate gate changelog',
+    sections: [
+      {
+        title: 'Current public status',
+        body: [
+          'There is no published package distribution or supported production release at this time. The repository is available as source.',
+          'Evaluate a pinned source commit and run repository checks. Do not treat an unreleased branch, workflow definition, or generated dist/ output as a supported release artifact.'
+        ]
+      },
+      {
+        title: 'Release candidate gate',
+        body: ['A candidate starts from a clean, reviewed commit and must pass:'],
+        code: `corepack pnpm install --frozen-lockfile
+corepack pnpm lint
+corepack pnpm build
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm test:clean-clone
+corepack pnpm benchmark`
+      },
+      {
+        title: 'Planned artifacts',
+        body: [
+          'The tag-triggered workflow is intended to attach SHA256SUMS, a CycloneDX SBOM, in-toto/SLSA provenance, and GitHub artifact attestations. Supply-chain evidence does not replace protocol verification or local trust policy.'
         ]
       }
     ]

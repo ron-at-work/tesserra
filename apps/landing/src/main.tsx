@@ -130,13 +130,25 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   }
   return (
     <button className="copy-btn" onClick={copy} aria-label={`Copy ${label}`}>
-      {copied ? 'COPIED' : 'COPY'}
+      {copied ? 'Copied' : 'Copy'}
     </button>
   );
 }
 
-function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`reveal ${className}`}>{children}</div>;
+function Reveal({
+  children,
+  className = '',
+  delay = 0
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <div className={`reveal ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
 }
 
 function LogoMark({ className = '' }: { className?: string }) {
@@ -147,6 +159,17 @@ function LogoMark({ className = '' }: { className?: string }) {
         fillRule="evenodd"
         d="M3 4h11v4H7v7H3V4Zm8 6h10v4h-6v6h-4V10Zm8 8h10v10H19V18Zm4 4v2h2v-2h-2Z"
         clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function GitHubIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 2C6.477 2 2 6.486 2 12.021c0 4.425 2.865 8.18 6.839 9.504.5.093.682-.217.682-.483 0-.237-.009-.866-.014-1.7-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.621.069-.608.069-.608 1.003.071 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.952 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.026 2.747-1.026.546 1.378.203 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.848-2.338 4.695-4.566 4.944.359.31.678.922.678 1.858 0 1.34-.012 2.419-.012 2.748 0 .268.18.58.688.481A10.025 10.025 0 0 0 22 12.021C22 6.486 17.523 2 12 2Z"
       />
     </svg>
   );
@@ -170,8 +193,8 @@ function ProvenanceGraph() {
   return (
     <div className="provenance" aria-label="Interactive provenance chain from human to resource">
       <div className="provenance-header">
-        <span>PROVENANCE · TAP OR CLICK TO INSPECT</span>
-        <span className="status">VERIFIED</span>
+        <span>How trust is proven</span>
+        <span className="status">Signature verified</span>
       </div>
       <div className="provenance-body">
         <div className="chain">
@@ -258,20 +281,39 @@ export function App() {
   }, []);
 
   const navLinks = [
-    ['Why', '#why'],
-    ['How', '#how'],
-    ['Protocol', '#protocol'],
+    ['Trust', '#trust'],
+    ['Process', '#process'],
     ['Security', '#security'],
     ['Get started', productConfig.links.app]
   ];
 
+  const processSteps = [
+    {
+      title: 'Issue identity',
+      body: 'Create a signed root credential for an agent. Public key only. Private keys stay local.'
+    },
+    {
+      title: 'Delegate narrowly',
+      body: 'Grant only the exact action, resource, task, and time window. Children can only shrink authority.'
+    },
+    {
+      title: 'Sign the request',
+      body: 'The agent signs what it is about to do: actor, capability, resource, and task digest.'
+    },
+    {
+      title: 'Verify the chain',
+      body: 'A receiver checks signatures, trust, attenuation, freshness, and bindings in one ordered pipeline.'
+    }
+  ];
+
   return (
     <>
-      <nav className="nav" aria-label="Primary navigation">
+      <div className="film-grain" aria-hidden="true" />
+
+      <nav className="nav bg-transparent" aria-label="Primary navigation">
         <div className="nav-inner">
           <a className="brand" href="#top" aria-label={`${productConfig.displayName} home`}>
             <LogoMark />
-            <span className="brand-dot" />
             {productConfig.displayName}
           </a>
           <div className="nav-links">
@@ -281,16 +323,28 @@ export function App() {
               </a>
             ))}
           </div>
-          <a className="nav-cta" href={productConfig.links.documentation}>
-            DOCS →
-          </a>
+          <div className="nav-actions">
+            <a
+              className="nav-github"
+              href={productConfig.links.repository}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub repository"
+            >
+              <GitHubIcon />
+              <span>GitHub</span>
+            </a>
+            <a className="nav-cta" href={productConfig.links.documentation}>
+              Docs
+            </a>
+          </div>
           <button
             className="menu-button"
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
             onClick={() => setMenuOpen((open) => !open)}
           >
-            MENU
+            Menu
           </button>
         </div>
         {menuOpen ? (
@@ -300,261 +354,180 @@ export function App() {
                 {label}
               </a>
             ))}
+            <a
+              href={productConfig.links.repository}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMenuOpen(false)}
+            >
+              GitHub
+            </a>
+            <a href={productConfig.links.documentation} onClick={() => setMenuOpen(false)}>
+              Docs
+            </a>
           </div>
         ) : null}
       </nav>
+
       <main id="top">
         <header className="hero">
-          <div className="wrap">
-            <p className="eyebrow">
-              <span className="dot" />
-              OPEN SOURCE · AGENT IDENTITY · DELEGATION
+          <div className="hero-atmosphere" aria-hidden="true">
+            <img
+              className="hero-mountains"
+              src="/mountains.png"
+              alt=""
+              width={1920}
+              height={1080}
+              decoding="async"
+            />
+            <div className="hero-sunglow" />
+            <div className="hero-mist" />
+            <div className="hero-clouds">
+              <img className="cloud cloud-a" src="/cloud-sprite.png" alt="" width={640} height={360} decoding="async" />
+              <img className="cloud cloud-b" src="/cloud-sprite.png" alt="" width={720} height={400} decoding="async" />
+            </div>
+            <div className="hero-scrim" />
+          </div>
+          <div className="wrap hero-content">
+            <h1 className="hero-title">Clear above the fog.</h1>
+            <p className="hero-copy">
+              Signed trails from root authority to the last agent step — trust you can still read in the mist.
             </p>
-            <div className="hero-grid">
-              <div>
-                <h1>
-                  Know which agent acted.
-                  <br />
-                  Know who authorized it.
-                </h1>
-                <p className="hero-copy">
-                  {productConfig.tagline} Portable cryptographic identity and delegation
-                  infrastructure for autonomous software agents.
-                </p>
-                <div className="actions">
-                  <a className="btn btn-primary" href={productConfig.links.repository}>
-                    View on GitHub →
-                  </a>
-                  <a className="btn btn-ghost" href="#protocol">
-                    Read the protocol →
-                  </a>
-                </div>
-                <p className="micro">Open source · Local-first · Protocol-oriented</p>
-              </div>
-              <ProvenanceGraph />
+            <div className="actions hero-actions">
+              <a className="btn btn-primary" href={productConfig.links.app}>
+                Open app
+              </a>
+              <a className="btn btn-ghost" href="#trust">
+                See the proof
+              </a>
             </div>
           </div>
         </header>
 
-        <section id="why">
-          <Reveal className="wrap section-grid">
-            <div>
-              <p className="kicker">01 / THE PROBLEM</p>
-              <h2>“Agent” isn't an audit trail.</h2>
-              <p className="lead">
-                When an agent acts across code hosts, tool protocols, cloud APIs, and internal
-                services, the receiving system needs more than a username or API key.
-              </p>
-              <ul className="questions">
-                <li data-num="01">Who was it?</li>
-                <li data-num="02">Who authorized it?</li>
-                <li data-num="03">What could it do?</li>
-                <li data-num="04">Who delegated that authority?</li>
-                <li data-num="05">Was it still valid?</li>
-              </ul>
-            </div>
-            <div className="unknown">
-              <div className="unknown-sources">
-                <span>Agent runtime</span>
-                <span>Custom agent</span>
-                <span>Automation</span>
-              </div>
-              <div className="unknown-flow">
-                <div className="agent-box">
-                  AGENT
-                  <br />
-                  REQUEST
-                </div>
-                <span className="question">?</span>
-                <div className="destinations">
-                  <span>Code host</span>
-                  <span>Cloud API</span>
-                  <span>Tool server</span>
-                  <span>Database</span>
-                </div>
-              </div>
-            </div>
+        <section id="trust" className="section-trust">
+          <Reveal className="wrap trust-intro">
+            <p className="trust-proof">
+              <span className="trust-proof-dot" aria-hidden="true" />
+              Trust from signatures, not vibes
+            </p>
+            <h2>How you know it is trusted</h2>
+            <p className="lead">
+              Every agent action carries a signed chain: who acted, who authorized it, what was
+              allowed, and whether it still holds. Tap any node to inspect the evidence.
+            </p>
+            <ProvenanceGraph />
           </Reveal>
         </section>
 
-        <section id="how">
+        <section className="trust-strip" aria-label="Trust signals">
+          <div className="wrap trust-strip-inner">
+            {[
+              'Signed identity',
+              'Narrow delegation',
+              'Deterministic verify',
+              'Local-first evidence'
+            ].map((item) => (
+              <span key={item} className="trust-chip">
+                <span className="trust-dot" aria-hidden="true" />
+                {item}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section id="process" className="section-process">
           <Reveal className="wrap">
-            <p className="kicker">02 / DELEGATION</p>
-            <div className="section-grid">
-              <div>
-                <h2>Authority can be delegated without being inherited.</h2>
-                <p className="lead">Delegation should narrow authority, not silently expand it.</p>
-              </div>
-              <div className="attenuation">
-                <article>
-                  <h3>AGENT A / ISSUER</h3>
-                  <p>
-                    repository.read <em>ALLOW</em>
-                  </p>
-                  <p>
-                    repository.write <em>ALLOW</em>
-                  </p>
-                  <p>
-                    deploy <em>ALLOW</em>
-                  </p>
-                </article>
-                <div className="delegate-arrow">
-                  DELEGATE <b>→</b>
-                </div>
-                <article>
-                  <h3>AGENT B / DELEGATE</h3>
-                  <p>
-                    repository.read <em>ALLOW</em>
-                  </p>
-                  <p>
-                    test.execute <em>ALLOW</em>
-                  </p>
-                  <strong className="deny">production.deploy → DENY</strong>
-                </article>
-              </div>
-            </div>
+            <h2>How {productConfig.displayName} works</h2>
+            <p className="lead">
+              Four steps from authority to a verified action. No cloud login required for the local
+              workflow.
+            </p>
+            <ol className="process-list">
+              {processSteps.map((step, index) => (
+                <Reveal key={step.title} className="process-item" delay={index * 90}>
+                  <span className="process-index" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </ol>
           </Reveal>
         </section>
 
-        <section className="paper-section">
+        <section id="why" className="section-why">
+          <Reveal className="wrap why-layout">
+            <h2>An agent name is not an audit trail.</h2>
+            <p className="lead">
+              When agents call code hosts, tools, cloud APIs, and internal services, receivers need
+              signed proof - not just a username or API key.
+            </p>
+            <ol className="questions">
+              {[
+                'Who was it?',
+                'Who authorized it?',
+                'What could it do?',
+                'Who delegated that authority?',
+                'Was it still valid?'
+              ].map((question, index) => (
+                <li key={question} style={{ transitionDelay: `${index * 60}ms` }}>
+                  {question}
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+        </section>
+
+        <section id="how" className="section-how grain-panel">
+          <div className="grain-panel-media" aria-hidden="true">
+            <img src="/grain-plate.png" alt="" width={1920} height={1080} loading="lazy" decoding="async" />
+          </div>
           <Reveal className="wrap">
-            <p className="kicker">03 / PROVENANCE</p>
-            <h2>
-              Trace the authority chain,
-              <br />
-              not just the request.
-            </h2>
-            <div className="trace">
-              {['Human', 'Agent A', 'Agent B', 'Resource'].map((actor, index) => (
-                <div key={actor}>
-                  <small>
-                    0{index + 1} / {['PRINCIPAL', 'AUTHORIZED', 'DELEGATED', 'REQUESTED'][index]}
-                  </small>
-                  <strong>{actor}</strong>
-                </div>
+            <h2>What you can do today</h2>
+            <p className="lead">Concrete capabilities in the current local reference stack.</p>
+            <div className="capability-grid">
+              {[
+                ['Identity', 'Issue and inspect agent credentials with deterministic key IDs.'],
+                ['Delegation', 'Attenuate authority so children only narrow, never expand.'],
+                ['Signed requests', 'Bind action, resource, task, and audience into one proof.'],
+                ['Verification', 'Run a fixed verifier order that fails closed on unknown trust.'],
+                ['CLI + SDK', `Use ${productConfig.commandName} and the TypeScript SDK offline.`],
+                ['Adapters', 'Map MCP, SPIFFE, and A2A at the boundary without replacing them.']
+              ].map(([title, body], index) => (
+                <Reveal key={title} className="capability-card" delay={index * 70}>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </Reveal>
               ))}
             </div>
-            <div className="verified-summary">
-              <strong>VERIFIED</strong>
-              <span>Issuer</span>
-              <span>Delegate</span>
-              <span>Capability</span>
-              <span>Resource</span>
-              <span>Task</span>
-              <span>Signature</span>
-            </div>
           </Reveal>
         </section>
 
-        <section>
-          <Reveal className="wrap section-grid">
+        <section id="security" className="section-security grain-panel">
+          <div className="grain-panel-media grain-panel-media-flip" aria-hidden="true">
+            <img src="/grain-plate.png" alt="" width={1920} height={1080} loading="lazy" decoding="async" />
+          </div>
+          <Reveal className="wrap security-layout">
             <div>
-              <p className="kicker">04 / EXISTING SYSTEMS</p>
-              <h2>Designed to fit the systems you already use.</h2>
+              <p className="trust-label">Verified evidence</p>
+              <h2>Cryptographic proof, not another header.</h2>
               <p className="lead">
-                Integrate with existing identity systems instead of creating another isolated
-                identity universe.
+                Verification is deterministic and binds a request to its authority context.
               </p>
-            </div>
-            <div>
-              <div className="integration-grid">
-                {[
-                  'SPIFFE / SPIRE',
-                  'MCP',
-                  'A2A',
-                  'OAuth / OIDC',
-                  'Code hosts',
-                  'Cloud IAM',
-                  'Internal APIs'
-                ].map((item, index) => (
-                  <div key={item}>
-                    <em>0{index + 1}</em>
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <p className="disclaimer">
-                INTEGRATION TARGETS · NO AFFILIATION OR ENDORSEMENT IMPLIED
-              </p>
-            </div>
-          </Reveal>
-        </section>
-
-        <section>
-          <Reveal className="wrap section-grid">
-            <div>
-              <p className="kicker">05 / WORKLOAD IDENTITY</p>
-              <h2>Use workload identity where it already works.</h2>
-              <p className="lead">
-                SPIFFE provides a mature foundation for cryptographic workload identity. This
-                project adds agent-specific identity, delegation, and provenance semantics above it.
-              </p>
-            </div>
-            <div className="identity-stack">
-              <span>SPIFFE / SPIRE</span>
-              <b>→</b>
-              <span>Workload identity</span>
-              <b>→</b>
-              <span>Agent identity</span>
-              <b>→</b>
-              <span>Delegation</span>
-              <b>→</b>
-              <span>Action provenance</span>
-            </div>
-          </Reveal>
-        </section>
-
-        <section id="protocol" className="paper-section">
-          <Reveal className="wrap protocol-shell">
-            <aside className="spec-index">
-              <strong>SPEC</strong>
-              <p>{productConfig.displayName} PROTOCOL / RFC-FIRST</p>
-              <ol>
-                <li>Identity</li>
-                <li>Delegation</li>
-                <li>Requests</li>
-                <li>Verification</li>
-                <li>Revocation</li>
-              </ol>
-            </aside>
-            <div className="spec-copy">
-              <p className="kicker">06 / RFC &amp; SPECIFICATION</p>
-              <h2>A protocol before a platform.</h2>
-              <p className="lead">
-                The goal is not another proprietary agent identity service. It is an interoperable
-                identity and delegation model that runtimes and infrastructure providers can
-                implement.
-              </p>
-              <div className="protocol-flow">
-                {['RFC', 'Reference implementation', 'SDKs', 'Adapters', 'Ecosystem'].map(
-                  (item, index) => (
-                    <div key={item}>
-                      <b>{index ? '↓' : '01'}</b>
-                      {item}
-                    </div>
+              <div className="security-formula">
+                {['Identity', 'Delegation', 'Task', 'Resource', 'Time', 'Nonce', 'Signature'].map(
+                  (item) => (
+                    <span key={item}>{item}</span>
                   )
                 )}
               </div>
-              <a className="spec-link" href={productConfig.links.documentation}>
-                Read the specification →
-              </a>
-            </div>
-          </Reveal>
-        </section>
-
-        <section>
-          <Reveal className="wrap section-grid">
-            <div>
-              <p className="kicker">07 / MCP</p>
-              <h2>Make tool calls attributable.</h2>
-              <p className="lead">
-                Bind actor, task, capability, resource, and signature to the request crossing a tool
-                boundary.
-              </p>
             </div>
             <div className="code-block">
               <div className="code-block-header">
-                <span>SIGNED TOOL REQUEST</span>
+                <span>Signed tool request</span>
                 <CopyButton value={signedRequest} label="signed tool request" />
               </div>
               <pre>{renderMint(signedRequest)}</pre>
@@ -562,55 +535,26 @@ export function App() {
           </Reveal>
         </section>
 
-        <section id="security">
-          <Reveal className="wrap section-grid">
+        <section id="get-started" className="section-cli">
+          <Reveal className="wrap cli-layout">
             <div>
-              <p className="kicker">08 / SECURITY MODEL</p>
-              <h2>
-                Cryptographic proof,
-                <br />
-                not another header.
-              </h2>
+              <h2>Start from the terminal</h2>
               <p className="lead">
-                Verification is deterministic and binds a request to its authority context.
+                Initialize local state, create a fixture identity, and verify conformance cases
+                without a cloud dependency.
               </p>
-              <p className="fine">
-                The RFC and implementation define the exact guarantees. This page makes no claim
-                beyond that intended model.
-              </p>
-            </div>
-            <div>
-              <div className="security-formula">
-                {[
-                  'Identity',
-                  'Delegation',
-                  'Task',
-                  'Resource',
-                  'Timestamp',
-                  'Nonce',
-                  'Signature'
-                ].map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
+              <div className="actions">
+                <a className="btn btn-primary" href={productConfig.links.repository}>
+                  View on GitHub
+                </a>
+                <a className="btn btn-ghost" href={productConfig.links.app}>
+                  Open app
+                </a>
               </div>
-              <p className="security-result">VERIFIABLE REQUEST</p>
-            </div>
-          </Reveal>
-        </section>
-
-        <section id="get-started">
-          <Reveal className="wrap section-grid">
-            <div>
-              <p className="kicker">09 / COMMAND LINE</p>
-              <h2>Identity should be usable from the terminal.</h2>
-              <p className="lead">
-                Create an identity, delegate a capability, and verify the resulting chain without
-                relying on an LLM or cloud service.
-              </p>
             </div>
             <div className="code-block terminal">
               <div className="code-block-header">
-                <span>TERMINAL / {productConfig.commandName.toUpperCase()}</span>
+                <span>{productConfig.commandName}</span>
                 <CopyButton value={cli} label="terminal commands" />
               </div>
               <pre>{renderMint(cli)}</pre>
@@ -618,95 +562,37 @@ export function App() {
           </Reveal>
         </section>
 
-        <section>
-          <Reveal className="wrap section-grid">
-            <div>
-              <p className="kicker">10 / OPEN SOURCE</p>
-              <h2>The protocol should be inspectable.</h2>
-              <p className="lead">
-                The specification, verification logic, adapters, and conformance tests belong in the
-                open.
-              </p>
-              <div className="actions">
-                <a className="btn btn-ghost" href={productConfig.links.repository}>
-                  Read the source →
-                </a>
-                <a className="btn btn-ghost" href={productConfig.links.documentation}>
-                  Read the docs →
-                </a>
-              </div>
-            </div>
-            <pre className="repo-tree">{`${productConfig.displayName.toLowerCase()}/\n├── protocol\n├── identity\n├── delegation\n├── verification\n├── adapters\n├── sdk\n├── cli\n└── tests`}</pre>
-          </Reveal>
-        </section>
-
-        <section>
-          <Reveal className="wrap">
-            <p className="kicker">11 / ROADMAP</p>
-            <h2>Build the protocol in the open.</h2>
-            <div className="roadmap">
-              {[
-                [
-                  'NOW',
-                  'Agent identity · Cryptographic credentials · Delegation · Verification · CLI · TypeScript SDK · Audit / provenance'
-                ],
-                [
-                  'NEXT',
-                  'SPIFFE integration · A2A integration · Federation · Key rotation · Revocation registry · Policy integration'
-                ],
-                [
-                  'LATER',
-                  'Enterprise trust federation · KMS / HSM integrations · Multi-agent authorization · Cross-organization delegation'
-                ]
-              ].map(([title, content]) => (
-                <article key={title}>
-                  <h3>{title}</h3>
-                  <p>{content}</p>
-                </article>
-              ))}
-            </div>
-          </Reveal>
-        </section>
-
         <section className="final">
+          <div className="final-glow" aria-hidden="true" />
           <Reveal className="wrap final-inner">
-            <div>
-              <p className="kicker">OPEN INFRASTRUCTURE FOR TRUST BOUNDARIES</p>
-              <h2>
-                Give agents an identity.
-                <br />
-                Give actions a provenance.
-              </h2>
-              <p className="lead">
-                Open infrastructure for autonomous software that needs to act across trust
-                boundaries.
-              </p>
-            </div>
-            <div className="actions" style={{ margin: 0 }}>
-              <a className="btn btn-primary" href={productConfig.links.repository}>
-                GitHub →
+            <h2>
+              Give agents an identity.
+              <br />
+              Give actions a provenance.
+            </h2>
+            <div className="actions">
+              <a className="btn btn-trust" href={productConfig.links.app}>
+                Open app
               </a>
               <a className="btn btn-ghost" href={productConfig.links.documentation}>
-                Read the protocol →
+                Read the docs
               </a>
             </div>
           </Reveal>
         </section>
       </main>
+
       <footer className="wrap footer">
-        <span>{productConfig.displayName} / OPEN SOURCE</span>
+        <span>{productConfig.displayName}</span>
         <span className="built-by">
           Built by{' '}
           <a href="https://www.linkedin.com/in/rounit08" target="_blank" rel="noreferrer">
             Rounit Sinha
           </a>{' '}
           ·{' '}
-          <a href="https://building.by" target="_blank" rel="noreferrer">
-            building.by
-          </a>
+     
         </span>
-        <span>LOCAL-FIRST · PROTOCOL-ORIENTED</span>
-        <a href={productConfig.links.security}>SECURITY →</a>
+        <a href={productConfig.links.security}>Security</a>
       </footer>
     </>
   );
